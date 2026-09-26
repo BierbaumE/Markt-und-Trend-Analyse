@@ -1,5 +1,19 @@
 name = "markt-und-trend-analyse"
+main = "worker.js"
 compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+# Wichtig: Jede Anfrage läuft zuerst durch worker.js (Login-Prüfung),
+# erst danach werden Dateien aus ./public ausgeliefert.
+run_worker_first = true
+
+[vars]
+# Anmelde-Server = Backend der Familien-App "Zuhause"
+AUTH_BASE = "https://bierbaum01.eike-bierbaum.workers.dev"
+# Optional: nur diese Benutzer zulassen (kommagetrennt, z. B. "eike,anna").
+# Leer = alle freigegebenen Konten der Familien-App (außer Kind-Konten).
+ALLOWED_USERS = ""
