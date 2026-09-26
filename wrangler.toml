@@ -11,8 +11,13 @@ binding = "ASSETS"
 # erst danach werden Dateien aus ./public ausgeliefert.
 run_worker_first = true
 
+# Interne Verbindung zum Backend der Familien-App (Worker "bierbaum01")
+[[services]]
+binding = "AUTH"
+service = "bierbaum01"
+
 [vars]
-# Anmelde-Server = Backend der Familien-App "Zuhause"
+# Nur Fallback, falls die Service Binding fehlt
 AUTH_BASE = "https://bierbaum01.eike-bierbaum.workers.dev"
 # Optional: nur diese Benutzer zulassen (kommagetrennt, z. B. "eike,anna").
 # Leer = alle freigegebenen Konten der Familien-App (außer Kind-Konten).
