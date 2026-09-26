@@ -18,6 +18,14 @@ function getCookie(request, name) {
   return null;
 }
 
+// Aufruf des Familien-App-Backends. Bevorzugt über die interne Service Binding "AUTH"
+// (Worker → Worker im selben Account; der öffentliche workers.dev-Weg wird von Cloudflare
+// mit Fehler 1042 geblockt). Fallback auf AUTH_BASE nur, falls keine Binding existiert.
+function authFetch(env, path, init) {
+  if (env.AUTH) return env.AUTH.fetch(new Request("https://bierbaum01" + path, init));
+  return fetch(String(env.AUTH_BASE || "").replace(/\/+$/, "") + path, init);
+}
+
 function allowedUsers(env) {
   return (env.ALLOWED_USERS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
@@ -27,7 +35,7 @@ async function verify(env, token) {
   const hit = verifyCache.get(token);
   if (hit && hit.until > Date.now()) return hit.user;
   try {
-    const res = await fetch(env.AUTH_BASE.replace(/\/+$/, "") + "/auth/me", { headers: { "X-Session-Token": token } });
+    const res = await authFetch(env, "/auth/me", { headers: { "X-Session-Token": token } });
     if (!res.ok) return null;
     const user = await res.json();
     if (!user || !user.username) return null;
@@ -115,15 +123,19 @@ export default {
         const username = String(form.get("username") || "").trim();
         const password = String(form.get("password") || "");
         let data = {};
+        let res;
         try {
-          const res = await fetch(env.AUTH_BASE.replace(/\/+$/, "") + "/auth/login", {
+          res = await authFetch(env, "/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
           });
-          data = await res.json();
         } catch (e) {
-          return loginPage("Anmeldeserver nicht erreichbar. Bitte später erneut versuchen.", username);
+          return loginPage("Anmeldeserver nicht erreichbar (" + (e && e.message || e) + ").", username);
+        }
+        const text = await res.text();
+        try { data = JSON.parse(text); } catch (e) {
+          return loginPage(`Anmeldeserver antwortet unerwartet (HTTP ${res.status}). ${env.AUTH ? "" : "Service Binding AUTH fehlt."}`, username);
         }
         if (!data.token) return loginPage(data.error || "Anmeldung fehlgeschlagen.", username);
         const user = await verify(env, data.token);
