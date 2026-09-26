@@ -109,14 +109,19 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
 
   for (const code of Object.keys(COUNTRIES)) {
     const c = COUNTRIES[code];
-    stmts.push(["INSERT OR REPLACE INTO country (code, name_de, languages, active_since, enabled) VALUES (?,?,?,?,?)",
+    stmts.push([`INSERT INTO country (code, name_de, languages, active_since, enabled) VALUES (?,?,?,?,?)
+      ON CONFLICT(code) DO UPDATE SET name_de=excluded.name_de, languages=excluded.languages,
+      active_since=excluded.active_since, enabled=excluded.enabled`,
       [code, c.nameDe, JSON.stringify(c.languages), countries.includes(code) ? now : null, countries.includes(code) ? 1 : 0]]);
   }
   for (const [id, dim, label] of CONCEPTS) {
-    stmts.push(["INSERT OR REPLACE INTO concept (id, dimension, label_de, status, created_at) VALUES (?,?,?, 'active', ?)", [id, dim, label, now]]);
+    stmts.push([`INSERT INTO concept (id, dimension, label_de, status, created_at) VALUES (?,?,?, 'active', ?)
+      ON CONFLICT(id) DO UPDATE SET dimension=excluded.dimension, label_de=excluded.label_de, status='active'`,
+      [id, dim, label, now]]);
   }
   for (const code of countries) {
     const seeds = (COUNTRIES[code] || {}).momentSeeds || {};
+    stmts.push(["DELETE FROM lexeme WHERE country_code = ?", [code]]);
     for (const [conceptId, terms] of Object.entries(seeds)) {
       for (const term of terms) {
         stmts.push(["INSERT OR IGNORE INTO lexeme (id, concept_id, lang, country_code, term, is_commercial_modifier) VALUES (?,?,?,?,?,0)",
@@ -125,15 +130,20 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
     }
   }
   for (const [key, sensor, tier, weight, geo] of SOURCES) {
-    stmts.push(["INSERT OR REPLACE INTO source (key, sensor, tier, legal_basis, tos_status, reliability_weight, geo_granularity, enabled) VALUES (?,?,?,?,?,?,?,1)",
+    stmts.push([`INSERT INTO source (key, sensor, tier, legal_basis, tos_status, reliability_weight, geo_granularity, enabled)
+      VALUES (?,?,?,?,?,?,?,1) ON CONFLICT(key) DO UPDATE SET sensor=excluded.sensor, tier=excluded.tier,
+      reliability_weight=excluded.reliability_weight, geo_granularity=excluded.geo_granularity, enabled=1`,
       [key, sensor, tier, "berechtigtes Interesse (zu prüfen)", tier === 1 ? "ok" : "review_pending", weight, geo]]);
   }
   for (const [sku, name, type, materials, surfaces, moments] of CATALOG) {
-    stmts.push(["INSERT OR REPLACE INTO catalog_item (id, sku, name, product_type, materials, surfaces, moments, created_at) VALUES (?,?,?,?,?,?,?,?)",
+    stmts.push([`INSERT INTO catalog_item (id, sku, name, product_type, materials, surfaces, moments, created_at)
+      VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(sku) DO UPDATE SET name=excluded.name, product_type=excluded.product_type,
+      materials=excluded.materials, surfaces=excluded.surfaces, moments=excluded.moments`,
       [uuidv7(), sku, name, type, JSON.stringify(materials), JSON.stringify(surfaces), JSON.stringify(moments), now]]);
   }
   for (const [surface, technique, rating] of TECHNIQUE_COMPAT) {
-    stmts.push(["INSERT OR REPLACE INTO technique_compatibility (surface, technique, rating, notes, tested_at) VALUES (?,?,?,?,?)",
+    stmts.push([`INSERT INTO technique_compatibility (surface, technique, rating, notes, tested_at) VALUES (?,?,?,?,?)
+      ON CONFLICT(surface, technique) DO UPDATE SET rating=excluded.rating, tested_at=excluded.tested_at`,
       [surface, technique, rating, "Startwert der Anwendungstechnik", now]]);
   }
   await flush(db, stmts);
@@ -143,9 +153,16 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
   const signalRows = [];
   for (const sc of SCENARIOS) {
     if (!countries.includes(sc.country)) continue;
-    const trendId = uuidv7();
-    tsRows.push(["INSERT OR REPLACE INTO trend (id, country_code, label_de, label_local, concept_ids, origin, created_at) VALUES (?,?,?,?,?,?,?)",
-      [trendId, sc.country, sc.label, sc.local, JSON.stringify(sc.concepts), "timeseries", now]]);
+    // Wiederholbar: bestehenden Trend wiederverwenden statt eine zweite Fassung anzulegen.
+    const existingTrend = await db.first("SELECT id FROM trend WHERE country_code = ? AND label_de = ?", sc.country, sc.label);
+    const trendId = existingTrend ? existingTrend.id : uuidv7();
+    if (existingTrend) {
+      tsRows.push(["UPDATE trend SET label_local = ?, concept_ids = ? WHERE id = ?",
+        [sc.local, JSON.stringify(sc.concepts), trendId]]);
+    } else {
+      tsRows.push(["INSERT INTO trend (id, country_code, label_de, label_local, concept_ids, origin, created_at) VALUES (?,?,?,?,?,?,?)",
+        [trendId, sc.country, sc.label, sc.local, JSON.stringify(sc.concepts), "timeseries", now]]);
+    }
     for (const conceptId of sc.concepts) {
       tsRows.push(["INSERT OR IGNORE INTO trend_concept (trend_id, concept_id) VALUES (?,?)", [trendId, conceptId]]);
     }
@@ -154,11 +171,15 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
         const week = isoWeek(new Date(Date.now() - (weeks - 1 - i) * 7 * 86400000));
         const value = Math.max(0, curve(shape, i, weeks, rng));
         // Die Reihe haengt am ersten Konzept des Trends (dem Leitkonzept).
-        tsRows.push(["INSERT OR REPLACE INTO ts_point (country_code, source_key, concept_id, iso_week, value_raw, value_scaled, seasonality_method) VALUES (?,?,?,?,?,?,?)",
+        tsRows.push([`INSERT INTO ts_point (country_code, source_key, concept_id, iso_week, value_raw, value_scaled, seasonality_method)
+          VALUES (?,?,?,?,?,?,?) ON CONFLICT(country_code, source_key, concept_id, iso_week)
+          DO UPDATE SET value_raw=excluded.value_raw, value_scaled=excluded.value_scaled`,
           [sc.country, sourceKey, sc.concepts[0], week, value, value, null]]);
         // und zusaetzlich als Kontext an den weiteren Konzepten
         if (sc.concepts[1] && i % 2 === 0) {
-          tsRows.push(["INSERT OR REPLACE INTO ts_point (country_code, source_key, concept_id, iso_week, value_raw, value_scaled, seasonality_method) VALUES (?,?,?,?,?,?,?)",
+          tsRows.push([`INSERT INTO ts_point (country_code, source_key, concept_id, iso_week, value_raw, value_scaled, seasonality_method)
+          VALUES (?,?,?,?,?,?,?) ON CONFLICT(country_code, source_key, concept_id, iso_week)
+          DO UPDATE SET value_raw=excluded.value_raw, value_scaled=excluded.value_scaled`,
             [sc.country, sourceKey, sc.concepts[1], week, value * 0.7, value * 0.7, null]]);
         }
       }
@@ -186,11 +207,18 @@ async function seedCreators(db, countries, now) {
   const d = (days) => new Date(Date.now() - days * 86400000).toISOString();
   for (const c of CREATORS) {
     if (!countries.includes(c.country)) continue;
-    const id = uuidv7();
-    rows.push(["INSERT OR IGNORE INTO creator_candidate (id, country_code, platform, handle, public_url, display_name, region, creative_categories, follower_count, discovered_via, discovered_at, purge_after, status, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-      [id, c.country, c.platform, c.handle, `https://example.invalid/${c.handle}`, c.name, c.region,
-        JSON.stringify(c.categories), c.followers, "simulator", now,
-        new Date(Date.now() + 90 * 86400000).toISOString(), "discovered", now]]);
+    // Wiederholbar: Profil anhand Plattform + Handle wiederfinden; Belege und Projekte neu aufbauen.
+    const existing = await db.first("SELECT id FROM creator_candidate WHERE platform = ? AND handle = ?", c.platform, c.handle);
+    const id = existing ? existing.id : uuidv7();
+    if (existing) {
+      rows.push(["DELETE FROM evidence_item WHERE creator_candidate_id = ?", [id]]);
+      rows.push(["DELETE FROM creator_project WHERE creator_candidate_id = ?", [id]]);
+    } else {
+      rows.push(["INSERT INTO creator_candidate (id, country_code, platform, handle, public_url, display_name, region, creative_categories, follower_count, discovered_via, discovered_at, purge_after, status, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        [id, c.country, c.platform, c.handle, `https://example.invalid/${c.handle}`, c.name, c.region,
+          JSON.stringify(c.categories), c.followers, "simulator", now,
+          new Date(Date.now() + 90 * 86400000).toISOString(), "discovered", now]]);
+    }
 
     const ev = [];
     const proj = [];
@@ -240,9 +268,14 @@ async function seedCompanies(db, countries, now) {
   const rows = [];
   for (const co of COMPANIES) {
     if (!countries.includes(co.country)) continue;
-    const id = uuidv7();
-    rows.push(["INSERT OR IGNORE INTO company_candidate (id, country_code, name, website, category, region, is_sole_trader, status, discovered_at, updated_at) VALUES (?,?,?,?,?,?,0,'identified',?,?)",
-      [id, co.country, co.name, `https://example.invalid/${encodeURIComponent(co.name.toLowerCase().replace(/\s+/g, "-"))}`, co.category, co.region, now, now]]);
+    const existing = await db.first("SELECT id FROM company_candidate WHERE country_code = ? AND name = ?", co.country, co.name);
+    const id = existing ? existing.id : uuidv7();
+    if (existing) {
+      rows.push(["DELETE FROM company_score_snapshot WHERE company_candidate_id = ?", [id]]);
+    } else {
+      rows.push(["INSERT INTO company_candidate (id, country_code, name, website, category, region, is_sole_trader, status, discovered_at, updated_at) VALUES (?,?,?,?,?,?,0,'identified',?,?)",
+        [id, co.country, co.name, `https://example.invalid/${encodeURIComponent(co.name.toLowerCase().replace(/\s+/g, "-"))}`, co.category, co.region, now, now]]);
+    }
     const components = {
       audienceFit: co.gap ? 0.8 : 0.45, assortmentFit: co.gap ? 0.6 : 0.5, momentProximity: co.gap ? 0.8 : 0.4,
       personalizationDiyAffinity: 0.6, regionalRelevance: 0.6, onlineActivity: 0.7,
