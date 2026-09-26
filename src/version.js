@@ -4,9 +4,12 @@
 // Minor für neue Funktionen) und trage oben in CHANGELOG einen neuen Eintrag im gleichen
 // Stil ein (kurze, nutzerseitige Stichpunkte auf Deutsch, bei Fehlerbehebungen mit dem
 // Warum). Nicht überspringen, auch wenn die Änderung klein scheint.
-export const APP_VERSION = "0.3.0";
+export const APP_VERSION = "0.3.1";
 
 export const CHANGELOG = [
+  { version: "0.3.1", notes: [
+    "Szenario-Simulator ließ sich nicht zweimal starten: beim erneuten Lauf brach er mit einem Datenbankfehler ab, weil bestehende Profile übersprungen wurden, die zugehörigen Belege aber auf neue Kennungen verwiesen. Er arbeitet jetzt wiederholbar und aktualisiert vorhandene Demodaten statt sie doppelt anzulegen",
+  ]},
   { version: "0.3.0", notes: [
     "Versionsanzeige, Änderungsprotokoll und „Was ist neu“ übernommen aus der Familien-App — der Hinweis erscheint automatisch einmal pro neuer Version",
     "„Was ist neu“ merkt sich den Stand jetzt serverseitig pro Konto statt im Browser: auf dem zweiten Gerät erscheint der Hinweis nicht erneut",
