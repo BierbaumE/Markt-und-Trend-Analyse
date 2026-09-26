@@ -7,7 +7,7 @@ preview_urls = false
 [assets]
 directory = "./public"
 binding = "ASSETS"
-# Wichtig: Jede Anfrage läuft zuerst durch worker.js (Login-Prüfung),
+# Jede Anfrage laeuft zuerst durch worker.js (Login-Pruefung),
 # erst danach werden Dateien aus ./public ausgeliefert.
 run_worker_first = true
 
@@ -16,9 +16,31 @@ run_worker_first = true
 binding = "AUTH"
 service = "bierbaum01"
 
+# Betriebsdatenbank. database_id nach dem Anlegen eintragen:
+#   npx wrangler d1 create radar-db --location weur
+[[d1_databases]]
+binding = "RADAR_DB"
+database_name = "radar-db"
+database_id = "dfe6a51e-77bd-44fa-8a58-0d8333a29768"
+
+# Spaeter (M3+): Cache, Archiv, Warteschlangen, Vektoren.
+# [[kv_namespaces]]
+# binding = "RADAR_CACHE"
+# id = "…"
+#
+# [[r2_buckets]]
+# binding = "RADAR_ARCHIVE"
+# bucket_name = "radar-archive"
+#
+# [triggers]
+# crons = ["0 3 * * *"]
+
 [vars]
 # Nur Fallback, falls die Service Binding fehlt
 AUTH_BASE = "https://bierbaum01.eike-bierbaum.workers.dev"
-# Optional: nur diese Benutzer zulassen (kommagetrennt, z. B. "eike,anna").
-# Leer = alle freigegebenen Konten der Familien-App (außer Kind-Konten).
+# Optional: nur diese Benutzer zulassen (kommagetrennt). Leer = alle Konten der Familien-App (ausser Kind-Konten).
 ALLOWED_USERS = ""
+# Diese Benutzer erhalten automatisch die Rolle "admin" (kommagetrennt).
+ADMIN_USERS = "eike"
+# "live" oder "fixture"
+RADAR_MODE = "live"

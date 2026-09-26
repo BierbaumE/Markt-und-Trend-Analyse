@@ -1,963 +1,104 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Memory Market Radar – Trend- und Neukundenradar</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#ECEEE8;--surface:#F8F9F5;--sunk:#E1E5DE;--ink:#172630;--ink2:#4B5B62;--ink3:#76848A;--rule:#CFD5CD;
-  --foil:#9C7A26;--foil-soft:#EFE4C4;--rise:#2C745F;--rise-soft:#D5E8DE;--fall:#A9434F;--fall-soft:#F2DADC;
-  --review:#5F52A0;--review-soft:#E3DFF2;
-  --serif:"Literata",Georgia,"Times New Roman",serif;
-  --sans:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#131D22;--surface:#1A272E;--sunk:#22323A;--ink:#E4E8E2;--ink2:#A9B5B6;--ink3:#7F8D90;--rule:#2F4048;
-  --foil:#D4B25E;--foil-soft:#3A3322;--rise:#72C4A5;--rise-soft:#1E3931;--fall:#E48892;--fall-soft:#40262A;
-  --review:#AA9EE8;--review-soft:#2D2947;}}
-:root[data-theme="dark"]{
-  --paper:#131D22;--surface:#1A272E;--sunk:#22323A;--ink:#E4E8E2;--ink2:#A9B5B6;--ink3:#7F8D90;--rule:#2F4048;
-  --foil:#D4B25E;--foil-soft:#3A3322;--rise:#72C4A5;--rise-soft:#1E3931;--fall:#E48892;--fall-soft:#40262A;
-  --review:#AA9EE8;--review-soft:#2D2947;}
-*,*::before,*::after{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-button,select,input,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--foil);outline-offset:2px;border-radius:3px}
-h1,h2,h3{font-family:var(--serif);font-weight:500;margin:0;letter-spacing:-.01em}
-h2{font-size:1.45rem;line-height:1.25}
-h3{font-size:1.1rem;line-height:1.3}
-p{margin:0 0 .6em}
-.num{font-variant-numeric:tabular-nums}
-.muted{color:var(--ink2)}.faint{color:var(--ink3)}
-.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
-
-/* header */
-header.top{background:var(--surface);border-bottom:1px solid var(--rule)}
-.brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 6px}
-.brand{font-family:var(--serif);font-size:.98rem;color:var(--ink2)}
-.brand b{color:var(--ink);font-weight:600}
-.demo{font-size:.78rem;color:var(--ink2);background:var(--sunk);padding:3px 9px;border-radius:20px;white-space:nowrap}
-.countries{display:flex;gap:4px;overflow-x:auto;padding:8px 0 0;scrollbar-width:none}
-.countries::-webkit-scrollbar{display:none}
-.cbtn{border:0;background:none;padding:8px 12px 10px;cursor:pointer;color:var(--ink2);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
-.cbtn[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--foil)}
-.cbtn:hover{color:var(--ink)}
-.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding:26px 0 22px}
-.hero h1{font-size:clamp(2.3rem,6vw,4rem);line-height:1;font-weight:400;letter-spacing:-.025em}
-.hero .sub{margin-top:10px;color:var(--ink2);font-size:.95rem}
-.flow{display:flex;gap:0;list-style:none;margin:0;padding:0;font-size:.8rem}
-.flow li{padding:6px 10px;border:1px solid var(--rule);margin-left:-1px;color:var(--ink3);background:var(--paper)}
-.flow li:first-child{border-radius:6px 0 0 6px;margin-left:0}.flow li:last-child{border-radius:0 6px 6px 0}
-.flow li.done{color:var(--ink2)}
-.flow li.now{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.flow small{display:block;font-size:.72rem;opacity:.8}
-
-nav.views{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule);padding-top:env(safe-area-inset-top,0px)}
-nav.views .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-nav.views .wrap::-webkit-scrollbar{display:none}
-.vbtn{border:0;background:none;padding:12px 12px;cursor:pointer;color:var(--ink2);white-space:nowrap;font-size:.92rem;font-weight:500;position:relative}
-.vbtn[aria-current="page"]{color:var(--ink)}
-.vbtn[aria-current="page"]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--ink)}
-.vbtn .ct{font-size:.75rem;color:var(--ink3);margin-left:4px}
-
-main{padding:28px 0 60px}
-section.block{margin-bottom:36px}
-.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:14px;flex-wrap:wrap}
-.bhead p{margin:0;color:var(--ink2);font-size:.9rem;max-width:62ch}
-.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
-.pad{padding:18px 20px}
-
-/* overview */
-.ov{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px}
-.exec{list-style:none;margin:0;padding:0;counter-reset:ex}
-.exec li{counter-increment:ex;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:14px 0;border-top:1px solid var(--rule);font-family:var(--serif);font-size:1.06rem;line-height:1.5}
-.exec li:first-child{border-top:0;padding-top:4px}
-.exec li::before{content:counter(ex);font-family:var(--sans);font-size:.8rem;color:var(--foil);font-weight:700;padding-top:4px}
-.radarwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
-.radar svg{width:100%;height:auto;display:block;max-width:620px;margin:0 auto}
-.radar .ringlab{font-size:9.5px;fill:var(--ink3);font-family:var(--sans)}
-.radar .seclab{font-size:11.5px;fill:var(--ink2);font-family:var(--serif)}
-.radar .secq{font-size:9px;fill:var(--ink3);font-style:italic;font-family:var(--serif)}
-.radar .dot{cursor:pointer}
-.radar .dot text{font-size:10px;font-weight:700;font-family:var(--sans);pointer-events:none}
-.radar .dot:hover circle.b,.radar .dot:focus circle.b{stroke:var(--ink);stroke-width:2}
-@media (prefers-reduced-motion:reduce){.sweep{display:none}}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--ink2);justify-content:center}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:11px;height:11px;border-radius:50%;display:inline-block}
-.rlist{list-style:none;margin:0;padding:0;font-size:.88rem}
-.rlist li{display:grid;grid-template-columns:24px 1fr auto;gap:8px;padding:8px 0;border-top:1px solid var(--rule);cursor:pointer;align-items:baseline}
-.rlist li:hover .rn{text-decoration:underline}
-.rlist .rk{font-weight:700;color:var(--ink3);font-size:.8rem}
-.rlist .rm{font-size:.78rem;color:var(--ink3)}
-
-.moves{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--rule);border-radius:10px;background:var(--surface);overflow:hidden}
-.move{padding:18px 20px;border-left:1px solid var(--rule)}
-.move:first-child{border-left:0}
-.move .mk{font-size:.8rem;color:var(--foil);font-weight:700;margin-bottom:6px}
-.move h3{font-size:1.08rem;margin-bottom:8px}
-.move p{font-size:.88rem;color:var(--ink2);margin:0}
-.dont{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.dont .d{padding:14px 16px;border-radius:8px;background:var(--fall-soft);border-left:3px solid var(--fall)}
-.dont .d b{display:block;margin-bottom:4px}
-.dont .d p{margin:0;font-size:.88rem;color:var(--ink2)}
-.dont .d .auto{font-size:.72rem;color:var(--fall);font-weight:600;margin-top:6px}
-
-/* table */
-.tscroll{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;background:var(--surface)}
-table{border-collapse:collapse;width:100%;font-size:.86rem}
-th{text-align:left;font-weight:600;color:var(--ink2);font-size:.78rem;padding:10px 12px;border-bottom:1px solid var(--rule);white-space:nowrap;background:var(--surface);position:sticky;top:0}
-th.sortable{cursor:pointer}th.sortable:hover{color:var(--ink)}
-td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
-tr:last-child td{border-bottom:0}
-tbody tr{cursor:pointer}
-tbody tr:hover td{background:var(--sunk)}
-td.tn{min-width:220px}
-td.tn b{font-weight:600;display:block}
-td.tn small{color:var(--ink3);font-style:italic;font-family:var(--serif)}
-.meter{display:flex;align-items:center;gap:8px;min-width:96px}
-.meter .bar{flex:1;height:5px;background:var(--sunk);border-radius:3px;overflow:hidden}
-.meter .bar i{display:block;height:100%;background:var(--ink)}
-.meter.f .bar i{background:var(--foil)}
-.meter b{font-weight:600;min-width:22px;text-align:right}
-.chip{display:inline-block;font-size:.74rem;padding:2px 8px;border-radius:12px;background:var(--sunk);color:var(--ink2);white-space:nowrap;font-weight:500}
-.chip.act{background:var(--foil-soft);color:var(--foil)}
-.chip.no{background:var(--fall-soft);color:var(--fall)}
-.chip.rev{background:var(--review-soft);color:var(--review)}
-.chip.up{background:var(--rise-soft);color:var(--rise)}
-.chip.expl{background:transparent;border:1px dashed var(--ink3)}
-.stage{font-size:.8rem;white-space:nowrap}
-.stage small{display:block;color:var(--ink3)}
-
-/* drawer */
-.scrim{position:fixed;inset:0;background:rgba(10,20,25,.36);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
-.scrim.on{opacity:1;pointer-events:auto}
-aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--surface);z-index:50;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);overflow-y:auto;border-left:1px solid var(--rule);padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
-aside.drawer.on{transform:none}
-@media (prefers-reduced-motion:reduce){aside.drawer,.scrim{transition:none}}
-.dhead{position:sticky;top:0;background:var(--surface);padding:18px 24px 14px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;z-index:2}
-.dhead h2{font-size:1.4rem}
-.close{border:1px solid var(--rule);background:var(--paper);border-radius:8px;width:36px;height:36px;cursor:pointer;flex:none;font-size:1.1rem}
-.dbody{padding:6px 24px 40px}
-.q{padding:16px 0;border-bottom:1px solid var(--rule)}
-.q:last-child{border-bottom:0}
-.q h4{margin:0 0 8px;font-size:.82rem;color:var(--ink3);font-weight:600}
-.q .ans{font-family:var(--serif);font-size:1rem;line-height:1.55}
-.sensor{display:grid;grid-template-columns:118px 1fr 58px;gap:10px;align-items:center;font-size:.84rem;padding:5px 0}
-.sensor .lab small{display:block;color:var(--ink3);font-size:.72rem}
-.div{position:relative;height:12px;background:var(--sunk);border-radius:6px}
-.div::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--ink3)}
-.div i{position:absolute;top:2px;bottom:2px;border-radius:4px}
-.interp{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--sunk);font-family:var(--serif);font-size:.96rem}
-.sdi{margin-top:8px;font-size:.84rem;padding:8px 12px;border-radius:8px;background:var(--review-soft);color:var(--review)}
-.fac{display:grid;grid-template-columns:160px 1fr 38px 44px;gap:10px;align-items:center;font-size:.82rem;padding:3px 0}
-.fac .bar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
-.fac .bar i{display:block;height:100%;background:var(--ink2)}
-.fac .w{color:var(--ink3);text-align:right}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.people{list-style:none;padding:0;margin:0}
-.people li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--rule);font-size:.9rem}
-.people li:first-child{border-top:0}
-.src{font-size:.84rem;color:var(--ink2);margin:0;padding-left:18px}
-.src li{margin:3px 0}
-.geo{font-size:.72rem;padding:1px 7px;border-radius:10px;margin-left:6px;background:var(--sunk)}
-.geo.uk{background:var(--review-soft);color:var(--review)}
-.imgph{display:flex;height:56px;border-radius:8px;overflow:hidden;margin-top:8px}
-.imgph span{flex:1}
-
-/* aesthetics */
-.aes{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px}
-.swrow{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin-bottom:10px}
-.swrow .strip{display:flex;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--rule)}
-.swrow .strip span{flex:1}
-.swrow .lab{font-size:.84rem;color:var(--ink2)}
-.shift{width:100%;font-size:.88rem;margin-top:14px}
-.shift td{cursor:default;padding:9px 8px}
-.shift td:first-child{color:var(--ink3);width:120px}
-.shift td.then{color:var(--ink3);text-decoration:line-through;text-decoration-color:var(--rule)}
-.cluster{margin-top:14px;padding:14px 16px;border-left:3px solid var(--foil);background:var(--foil-soft);border-radius:0 8px 8px 0;font-family:var(--serif)}
-.cluster small{display:block;font-family:var(--sans);color:var(--foil);font-weight:600;font-size:.76rem;margin-bottom:4px}
-.mm{list-style:none;padding:0;margin:0}
-.mm li{display:grid;grid-template-columns:130px 1fr 60px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--rule);font-size:.9rem}
-.mm li:first-child{border-top:0}
-.mm .note{grid-column:2/4;font-size:.8rem;color:var(--ink3);margin-top:-4px}
-.tech{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.tech div{padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem}
-.tech .ar{font-weight:700}
-.adj{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.adj .a{padding:16px 18px;border:1px solid var(--foil);border-radius:10px;background:var(--surface)}
-.adj .a small{color:var(--foil);font-weight:600;font-size:.76rem}
-.adj .a h3{margin:4px 0 6px}
-.adj .a p{margin:0;font-size:.88rem;color:var(--ink2)}
-
-/* creators & leads */
-.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.fbtn{border:1px solid var(--rule);background:var(--surface);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:.84rem;color:var(--ink2)}
-.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.person{background:var(--surface);border:1px solid var(--rule);border-radius:10px;margin-bottom:14px;overflow:hidden}
-.person .top{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:20px;padding:18px 20px}
-.person h3{font-family:var(--sans);font-weight:600;font-size:1.05rem}
-.person .meta{font-size:.82rem;color:var(--ink3);margin:2px 0 8px}
-.person .foc{font-family:var(--serif);font-size:.98rem;margin:0}
-.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.score{text-align:left}
-.score b{font-family:var(--serif);font-size:1.7rem;font-weight:500;display:block;line-height:1.1}
-.score.main b{color:var(--foil)}
-.score span{font-size:.72rem;color:var(--ink3)}
-.why{list-style:none;padding:0;margin:0;font-size:.84rem}
-.why li{padding:2px 0 2px 18px;position:relative}
-.why li::before{position:absolute;left:0;font-weight:700}
-.why li.p::before{content:"+";color:var(--rise)}
-.why li.m::before{content:"–";color:var(--fall)}
-.bridge{padding:12px 20px;border-top:1px solid var(--rule);background:var(--paper);display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap;font-size:.86rem}
-.bridge .bt{font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
-.statussel{margin-left:auto;display:flex;gap:8px;align-items:center}
-select{border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:.85rem}
-details.hook{border-top:1px solid var(--rule)}
-details.hook summary{padding:12px 20px;cursor:pointer;font-weight:600;font-size:.9rem;list-style:none;display:flex;justify-content:space-between}
-details.hook summary::-webkit-details-marker{display:none}
-details.hook summary::after{content:"+";color:var(--ink3);font-weight:400}
-details.hook[open] summary::after{content:"–"}
-.hookbody{padding:0 20px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px}
-.hookgrid{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:.86rem}
-.hookgrid dt{color:var(--ink3)}
-.hookgrid dd{margin:0;font-family:var(--serif)}
-.motives{display:flex;gap:6px;margin:0 0 8px;flex-wrap:wrap}
-textarea{width:100%;min-height:170px;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;background:var(--paper);font-family:var(--serif);font-size:.93rem;line-height:1.5;resize:vertical}
-.guard{list-style:none;padding:0;margin:10px 0;font-size:.84rem}
-.guard li{padding:3px 0 3px 24px;position:relative}
-.guard li::before{position:absolute;left:0;top:3px;width:16px;height:16px;border-radius:50%;font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:700}
-.guard li.ok::before{content:"✓";background:var(--rise-soft);color:var(--rise)}
-.guard li.bad::before{content:"!";background:var(--fall-soft);color:var(--fall)}
-.guard li.bad{color:var(--fall)}
-.btn{border:1px solid var(--ink);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.86rem}
-.btn:disabled{opacity:.35;cursor:not-allowed}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.chk{display:flex;gap:8px;align-items:center;font-size:.86rem;cursor:pointer}
-.chk input{width:16px;height:16px;accent-color:var(--foil)}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:.25s;z-index:60;pointer-events:none}
-.toast.on{opacity:1;transform:translateX(-50%)}
-
-/* europe */
-.heat td,.heat th{text-align:center;cursor:default}
-.heat td:first-child,.heat th:first-child{text-align:left}
-.heat tbody tr{cursor:default}
-.heat tbody tr:hover td{background:inherit}
-.hc{display:inline-block;min-width:46px;padding:5px 0;border-radius:6px;font-weight:600}
-
-/* method */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.kpi{padding:16px 18px;background:var(--surface);border:1px solid var(--rule);border-radius:10px}
-.kpi.ns{border-color:var(--foil);grid-column:span 2}
-.kpi b{font-family:var(--serif);font-size:2rem;font-weight:500;display:block;line-height:1.1}
-.kpi.ns b{font-size:2.6rem;color:var(--foil)}
-.kpi h4{margin:0 0 6px;font-size:.84rem;font-weight:600}
-.kpi p{margin:6px 0 0;font-size:.8rem;color:var(--ink3)}
-.funnel{display:flex;gap:2px;margin-top:10px;height:34px;align-items:flex-end}
-.funnel div{flex:1;background:var(--foil);opacity:.35;border-radius:2px 2px 0 0;position:relative}
-.funnel div.hi{opacity:1}
-.flab{display:flex;gap:2px;font-size:.66rem;color:var(--ink3)}
-.flab span{flex:1;text-align:center}
-.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.weights .wr{display:grid;grid-template-columns:150px 1fr 48px;gap:10px;align-items:center;font-size:.85rem;padding:4px 0}
-input[type=range]{width:100%;accent-color:var(--ink)}
-.formula{font-size:.84rem;line-height:1.7}
-.formula div{display:flex;justify-content:space-between;border-top:1px dotted var(--rule);padding:3px 0}
-.principles{columns:2 260px;column-gap:28px;font-size:.9rem;padding-left:18px;margin:0}
-.principles li{margin-bottom:6px;break-inside:avoid}
-.layers{list-style:none;padding:0;margin:0;counter-reset:ly}
-.layers li{counter-increment:ly;display:grid;grid-template-columns:34px 1fr;padding:10px 0;border-top:1px solid var(--rule);font-size:.88rem}
-.layers li:first-child{border-top:0}
-.layers li::before{content:counter(ly);font-family:var(--serif);font-size:1.2rem;color:var(--foil)}
-.layers b{display:block}
-footer{font-size:.8rem;color:var(--ink3);padding:20px 0 40px;border-top:1px solid var(--rule)}
-
-@media (max-width:980px){
-  .ov,.aes{grid-template-columns:1fr}
-  .person .top{grid-template-columns:1fr 1fr}
-  .person .top>div:first-child{grid-column:1/-1}
-  .hookbody{grid-template-columns:1fr}
-}
-@media (max-width:720px){
-  .wrap{padding:0 16px}
-  .hero{grid-template-columns:1fr;padding:18px 0 16px}
-  .flow{overflow-x:auto;scrollbar-width:none}
-  .flow li{white-space:nowrap}
-  .moves{grid-template-columns:1fr}
-  .move{border-left:0;border-top:1px solid var(--rule)}
-  .move:first-child{border-top:0}
-  .person .top{grid-template-columns:1fr}
-  .kpi.ns{grid-column:auto}
-  .fac{grid-template-columns:120px 1fr 32px 38px}
-  .sensor{grid-template-columns:96px 1fr 50px}
-  .mm li{grid-template-columns:100px 1fr 52px}
-  .swrow{grid-template-columns:1fr}
-  .dbody{padding:4px 18px 40px}.dhead{padding:16px 18px 12px}
-  .statussel{margin-left:0;width:100%}
-  .demo{display:none}
-}
-</style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Markt- und Trend-Analyse</title>
+<meta name="theme-color" content="#10161A" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Radar" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
+<link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-<header class="top">
-  <div class="wrap">
-    <div class="brandrow">
-      <div class="brand"><b>Memory Market Radar</b> &nbsp;Trend- und Neukundenradar</div>
-      <span class="demo">Prototyp mit fiktiven Demodaten</span>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>Markt- und Trend-Analyse</h1>
+      <span class="topbar-version" id="topbarVersion"></span>
+      <span class="topbar-version" id="topbarUser"></span>
     </div>
-    <div class="countries" id="countries" role="group" aria-label="Land wählen"></div>
-    <div class="hero">
-      <div>
-        <h1 id="cname">Deutschland</h1>
-        <div class="sub" id="csub"></div>
-      </div>
-      <ol class="flow" id="flow" aria-label="Report-Workflow dieser Woche"></ol>
+    <div class="topbar-actions">
+      <button class="gear-btn" id="tasksBtn" aria-label="Aufgaben">🔔<span id="tasksBadge" class="badge-dot hidden"></span></button>
+      <button class="gear-btn" id="adminBtn" aria-label="Verwaltung" style="display:none">👤</button>
+      <button class="gear-btn" id="settingsBtn" aria-label="Einstellungen">⚙️</button>
     </div>
   </div>
-</header>
-<nav class="views" aria-label="Bereiche"><div class="wrap" id="views"></div></nav>
-<main><div class="wrap" id="main"></div></main>
-<footer><div class="wrap">Prototyp. Alle Personen, Handles, Unternehmen und Messwerte sind fiktiv und dienen der Veranschaulichung der Scoring-Logik. Scores werden live im Browser aus den Rohsignalen berechnet; Review-Status und Freigaben werden lokal in diesem Browser gespeichert. Das System empfiehlt – ein Mensch entscheidet.</div></footer>
 
-<div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dtitle"></aside>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="banners"></div>
+  <div id="view"><div class="loading">Lade …</div></div>
 
-<script>
-/* =========================================================
-   ONTOLOGIE & KONSTANTEN
-   ========================================================= */
-const STAGES=["Emerging Signal","Corroborated Signal","Emerging Trend","Established Trend","Saturating","Declining"];
-const STAGE_DE=["erste Auffälligkeit","mehrere Quellen bestätigen","Wachstum + Persistenz","breite Marktakzeptanz","Wachstum flacht ab","Rückgang"];
-const PURPOSES=["Selbstausdruck","Beziehung","Zugehörigkeit","Bewahrung","Ritual","Vermächtnis"];
-const PURPOSE_Q={Selbstausdruck:"Das bin ich.",Beziehung:"Das bist du für mich.",Zugehörigkeit:"Das sind wir.",Bewahrung:"Das darf nicht verloren gehen.",Ritual:"Dieser Moment verdient Bedeutung.",Vermächtnis:"Das soll bleiben."};
-const SENSORS=[{k:"Google",r:"Nachfrage",src:"Google Trends"},{k:"Pinterest",r:"Planung",src:"Pinterest Trends"},{k:"TikTok",r:"Kultur",src:"TikTok Creative Center"},{k:"Etsy",r:"Kaufintention",src:"Etsy Marketplace Insights"}];
-const CORE_MOMENTS=["Geburt","Taufe","Hochzeit"]; // heutiges Kernsortiment
-const DEFAULT_W={vel:24,acc:18,cross:18,nov:14,cli:10,per:8,com:8};
-const W_LABEL={vel:"Velocity",acc:"Acceleration",cross:"Cross-Source Confirmation",nov:"Novelty",cli:"Cultural Lift",per:"Persistence",com:"Commercial Signal"};
-const MRS_W=[["Schwellenmomentnähe",30],["Personalisierungspotenzial",20],["Emotionale Bedeutung",15],["Passung zu Rohlingen",15],["Veredelbarkeit",10],["Kommerzielles Potenzial",10]];
-const SEI_W=[["Hilfeverhalten",20],["Initiationsverhalten",20],["Wiederkehrende Interaktion",15],["Peer-Aktivierung",15],["Experimentierfreude",10],["Antwortqualität",10],["Netzwerkbrücken",10]];
-const MMF_W=[["Social Energy",20],["Echte Maker-Aktivität",15],["Erinnerungsmomentnähe",15],["Rohlingkompatibilität",15],["Veredelungskompetenz",10],["Lern-/Experimentierverhalten",10],["Lokale Vernetzung",10],["Kommerzielle Erfahrung",5]];
-const COS_W=[["Zielgruppenpassung",20],["Sortimentspassung",15],["Schwellenmomentnähe",15],["Personalisierungs-/DIY-Affinität",15],["Regionale Relevanz",10],["Online-Aktivität",10],["Erkennbare Sortimentslücke",10],["Kontaktierbarkeit",5]];
-const C_STATUS=["Neu entdeckt","Relevant bestätigt","Verworfen","Kontaktiert","Rohling erhalten","Kreation gezeigt","Multiplikatorin"];
-const L_STATUS=["Neu","Qualifiziert","Verworfen","Kontaktiert","Gespräch","Muster/Angebot","Partner"];
-
-/* =========================================================
-   DEMODATEN (fiktiv) – Rohsignale je Land
-   s: Wachstum ggü. lokaler Baseline in % [Google, Pinterest, TikTok, Etsy]
-   f: [Velocity, Acceleration, Novelty, CLI-Ratio, Persistence, Commercial] (roh)
-   r: Memory-Relevance-Faktoren 0–100
-   ========================================================= */
-const DATA={
-DE:{name:"Deutschland",radar:"Germany Memory Market Radar",
- trends:[
-  {id:"de1",n:"Großeltern-Erinnerungsbücher zum Selbstausfüllen",q:"erinnerungsbuch oma ausfüllen",m:"Großeltern",p:"Vermächtnis",st:"nostalgisch",mo:"Familienbaum",ma:"Leinen",te:"Prägung",pr:"Erinnerungsbuch",s:[18,34,12,26],f:[62,58,58,1.6,70,64],r:[86,90,92,70,80,66],stg:2,prev:1,prob:.68,win:20,gap:"Leinen-Erinnerungsbuch mit vorgeprägten Kapiteln (Kindheit, Hochzeit, Enkel)",why:"Großeltern werden vom Beschenkten zur Autorin: Gesucht wird nicht das Fotobuch, sondern ein Buch, das sie selbst schreiben und an Enkel weitergeben."},
-  {id:"de2",n:"Wildblumen-Linienillustration zur Taufe",q:"taufalbum wildblumen",m:"Taufe",p:"Ritual",st:"botanisch",mo:"Wildblumen",ma:"Naturpapier",te:"Handlettering",pr:"Album",s:[9,22,15,11],f:[48,40,35,1.1,78,52],r:[92,80,78,90,72,60],stg:3,prev:3,prob:.74,win:30,gap:null,why:"Etabliert und stabil. Neu ist nur die Ausführung: handgeletterte Namen ersetzen gedruckte Schriftzüge."},
-  {id:"de3",n:"Lasergravierte Holz-Boxen zur Einschulung",q:"einschulung erinnerungsbox holz gravur",m:"Einschulung",p:"Bewahrung",st:"modern classic",mo:"Monogramm",ma:"Holz",te:"Lasergravur",pr:"Box",s:[21,14,28,33],f:[66,61,52,1.4,58,78],r:[80,76,68,55,85,82],stg:1,prev:0,prob:.61,win:10,gap:"Holz-Hybrid-Box mit gravurfähigem Deckel im A4-Format",why:"Saisonpeak ist vorbei, das Niveau liegt aber klar über der Vorjahres-Baseline – kein reiner Saisoneffekt."},
-  {id:"de4",n:"Gedenkalben für Haustiere",q:"erinnerungsalbum hund verstorben",m:"Haustier",p:"Bewahrung",st:"naturalistisch",mo:"Pfotenabdruck",ma:"Leinen",te:"Stempel",pr:"Album",s:[14,19,24,9],f:[55,58,72,1.3,52,44],r:[74,82,90,60,70,48],stg:1,prev:0,prob:.57,win:26,gap:"Kompaktes Gedenkalbum mit Fenster-Cover für einen Pfotenabdruck",why:"Neuer Lebensmoment außerhalb des Kernsortiments; von Fotobuch-Anbietern bisher kaum adressiert.",ex:true},
-  {id:"de5",n:"Resin-Hochzeitsdeko",q:"resin hochzeit deko",m:"Hochzeit",p:"Selbstausdruck",st:"verspielt",mo:"Ornament",ma:"Kraftkarton",te:"Mixed Media",pr:"Rahmen",s:[4,6,58,-6],f:[72,70,64,0.9,30,18],r:[40,35,38,20,25,22],stg:0,prev:0,prob:.44,win:6,gap:null,why:"Starke Video-Dynamik, aber weder Planungs- noch Kaufbestätigung."},
-  {id:"de6",n:"Goldene Heißfolien-Gästebücher",q:"gästebuch hochzeit gold",m:"Hochzeit",p:"Ritual",st:"luxuriös",mo:"Monogramm",ma:"Weißkarton",te:"Heißfolie",pr:"Gästebuch",s:[-8,-4,-2,-11],f:[22,18,15,0.8,80,40],r:[85,70,72,88,80,55],stg:4,prev:3,prob:.7,win:0,gap:null,why:"Wachstum flacht in allen vier Quellen ab – das Segment ist gesättigt."}],
- creators:[
-  {id:"dec1",h:"@papierundgarn.atelier",pl:"Instagram",rg:"Leipzig",foc:"Taufalben mit Handlettering und gestickten Details",tags:["Taufe","botanisch","Wildblumen","Naturpapier","Handlettering","Stickerei","Album"],b:[82,74,70,78,66,80,60],fol:2400,cc:[14,12],mmf:[90,80,78,72,68,50,60],plus:["arbeitet überwiegend mit Taufe und Geburt","9 ausführliche Technik-Erklärungen in 30 Tagen","drei Veredelungsverfahren: Lettering, Stickerei, Prägung","verkauft kleine Serien im eigenen Shop"],minus:["bisher kaum Box-Formate"],obs:"deine Taufalben mit handgeletterten Namen und gestickten Wildblumen",prod:"Leinen-Taufalbum, unveredelt",cw:"Kontaktformular der geschäftlichen Website",src:["Instagram-Profil (öffentlich, geschäftlich)","Website mit Impressum","Etsy-Shop"],rs:3},
-  {id:"dec2",h:"@omas.erinnerungswerkstatt",pl:"Pinterest + Blog",rg:"Münster",foc:"Vorlagen und VHS-Workshops für Großeltern-Erinnerungsbücher",tags:["Großeltern","nostalgisch","Familienbaum","Leinen","Prägung","Stempel","Erinnerungsbuch"],b:[90,85,82,88,50,86,78],fol:900,cc:[10,9],mmf:[85,88,70,55,90,90,40],plus:["leitet monatliche Workshops an der VHS","Teilnehmerinnen posten Ergebnisse mit Verweis auf ihre Vorlagen","kleine, aber sehr aktive Community (900 Follower)"],minus:["Veredelung bisher nur mit Stempeln"],obs:"deine Vorlagen und Workshops für Großeltern-Erinnerungsbücher",prod:"Leinen-Erinnerungsbuch mit Kapitelstruktur",cw:"geschäftliche E-Mail im Blog-Impressum",src:["Pinterest-Profil (öffentlich)","Blog mit Impressum","VHS-Kursprogramm"],rs:1},
-  {id:"dec3",h:"@holzwerk.mila",pl:"TikTok",rg:"Stuttgart",foc:"Lasergravur auf Holz für Einschulungs- und Geburtsgeschenke",tags:["Einschulung","Geburt","modern classic","Monogramm","Holz","Lasergravur","Box"],b:[70,80,55,72,85,60,70],fol:18600,cc:[20,15],mmf:[82,62,72,80,55,40,85],plus:["zeigt Prozess und Ergebnis konsequent","Nachahmer-Videos mit Verweis auf ihre Anleitungen","erfahrene Kleinserien-Verkäuferin"],minus:["fast ausschließlich Holz, kaum Papierprodukte","Antworten in Kommentaren eher knapp"],obs:"deine gravierten Einschulungsboxen mit Monogramm-Deckel",prod:"Holz-Hybrid-Box, gravurfähig",cw:"Business-Kontakt im TikTok-Profil",src:["TikTok-Profil (Business)","Etsy-Shop"],rs:0},
-  {id:"dec4",h:"@pfote.und.papier",pl:"Etsy",rg:"Hamburg",foc:"Gedenk-Erinnerungen an Haustiere mit Stempeln und Fototransfer",tags:["Haustier","naturalistisch","Pfotenabdruck","Leinen","Stempel","Fototransfer","Album"],b:[64,58,60,52,70,72,40],fol:3100,cc:[12,10],mmf:[72,85,58,62,55,38,80],plus:["einziges professionelles Profil mit Fokus Haustier-Gedenken im Suchraum","hohe Antwortqualität in Shop-Bewertungen"],minus:["wenig Community-Interaktion außerhalb von Etsy"],obs:"deine Gedenkalben mit Pfotenabdruck-Stempeln",prod:"Gedenkalbum mit Fenster-Cover",cw:"Etsy-Shopnachricht",src:["Etsy-Shop (öffentlich)"],rs:0}],
- leads:[
-  {id:"del1",n:"Papeterie Kleinod",city:"Freiburg",cat:"Papeterie & Workshops",f:[85,70,80,88,70,75,84,90],gap:"führt Taufkarten und Hochzeitspapeterie, aber kein hochwertiges veredelbares Album",why:["Papeterie mit Taufe- und Hochzeitsfokus","monatliche Handlettering-Workshops","aktive lokale Instagram-Community"],tags:["Taufe","Hochzeit","botanisch","Handlettering","Naturpapier","Album"],pr:["Leinen-Taufalbum","Gästebuch Naturpapier"],anlass:"Workshopreihe „Handlettering fürs Taufalbum“ mit unseren Rohlingen ausstatten",rs:1},
-  {id:"del2",n:"Kreativmarkt Hansen",city:"Bremen",cat:"Bastel- & Kreativhandel",f:[72,80,62,92,62,55,70,80],gap:"breites Plotter- und Lasersortiment, aber keine Rohlinge für Erinnerungsprodukte",why:["Plotter- und Lasergravur-Kundschaft","Kursraum vorhanden"],tags:["Lasergravur","Vinyl","Einschulung","Holz","Box"],pr:["Holz-Hybrid-Box","Einschulungsbox"],anlass:"Einschulungsbox als Laser-Workshop für die nächste Saison",rs:0},
-  {id:"del3",n:"Lichtblick Fotostudio",city:"Nürnberg",cat:"Fotostudio (Baby & Familie)",f:[82,55,90,58,74,70,80,85],gap:"Neugeborenen-Shootings ohne physisches Erinnerungsprodukt jenseits von Prints",why:["Neugeborenen- und Tauf-Shootings","Kundinnen fragen nach Alben"],tags:["Geburt","Taufe","Album","minimalistisch"],pr:["Leinen-Babyalbum","Erinnerungskassette"],anlass:"Album als Upsell-Paket zum Neugeborenen-Shooting",rs:0}],
- exec:["Großeltern werden vom Beschenkten zur Autorin: Erinnerungsbücher zum Selbstausfüllen wachsen auf Pinterest und Etsy gleichzeitig.","Haustier-Gedenken taucht als eigener Lebensmoment auf – bislang außerhalb unseres Sortiments.","Einschulungsboxen aus Holz bleiben nach dem Saisonpeak über Vorjahresniveau; kein reiner Saisoneffekt.","Goldene Heißfolie im Hochzeitssegment ist gesättigt – alle vier Quellen flachen ab."],
- moves:[{t:"Vier Großeltern-Gestalterinnen einen Leinen-Erinnerungsbuch-Rohling schicken",d:"Startpunkt @omas.erinnerungswerkstatt. Ziel: Kapitelstruktur und Prägeflächen im Praxistest prüfen."},{t:"Gedenkalbum mit Fenster-Cover als Prototyp testen",d:"Innovationsauftrag an die Produktentwicklung; erste Testerin @pfote.und.papier."},{t:"Drei Papeterien mit Workshop-Programm kontaktieren",d:"Anlass: Handlettering fürs Taufalbum. Rohlinge als Workshopmaterial anbieten."}],
- dont:[{t:"Resin-Hochzeitsdeko nicht verfolgen",d:"Hohe TikTok-Dynamik, aber kein Kauf- und kein Memory Fit."},{t:"Kein weiteres Gold-Gästebuch mit Heißfolie",d:"Segment gesättigt; Differenzierung nur noch über den Preis."}],
- aes:{then:["#F5F1EA","#E9DDC9","#CDB88F","#FFFFFF","#B8995F","#D9D3CA"],now:["#E7E4D8","#C7C2AE","#8F9B7C","#6E7E69","#B08A5B","#F2EFE6"],cluster:"Salbei- und Moosgrün + sichtbare Leinenstruktur + handschriftliche Kapiteltitel + Familienbaum-Linien.",rows:[["Material","Weißkarton, Glanzfolie","Leinen, Naturpapier"],["Typografie","Script-Fonts in Gold","Handschrift, schmale Grotesk"],["Motive","Herzen, Sterne","Familienbaum, Wildblumen, Pfoten"],["Formensprache","symmetrisch, dekorativ","ruhig, viel Weißraum"]]},
- moments:[{n:"Großeltern",d:31,k:"steigt"},{n:"Haustier",d:24,k:"neu",note:"eigenständiger Lebensmoment, nicht mehr nur Fotobuch"},{n:"Einschulung",d:18,k:"steigt"},{n:"Taufe",d:6,k:"verändert sich",note:"von gedruckt zu handgelettert"},{n:"Hochzeit",d:-7,k:"fällt"}],
- tech:[["Lasergravur",28],["Handlettering",19],["Prägung",12],["Stempel",9],["Vinyl",1],["Heißfolie",-11]],
- adj:[{n:"Haustier-Gedenken",d:"Signale in drei von vier Quellen, kein passender Rohling im Sortiment."},{n:"Großeltern als Autorinnen",d:"Ein Erinnerungsbuch mit Kapitelstruktur fehlt – neues Ritual rund um ein bestehendes Produkt."}]},
-
-SE:{name:"Schweden",radar:"Sweden Memory Market Radar",
- trends:[
-  {id:"se1",n:"Leinen + reduzierte Typografie zur Konfirmation",q:"konfirmation minnesbok",m:"Konfirmation",p:"Ritual",st:"minimalistisch",mo:"Linienillustration",ma:"Leinen",te:"Prägung",pr:"Erinnerungsbuch",s:[16,41,22,19],f:[68,64,60,2.1,66,58],r:[88,82,80,86,78,62],stg:2,prev:1,prob:.71,win:24,gap:"Schmales Leinen-Erinnerungsbuch im Querformat mit Blindprägefläche",why:"Konfirmationsprodukte lösen sich von Weiß und Silber; Naturleinen mit einer einzigen Zeile Typografie setzt sich durch."},
-  {id:"se2",n:"Namngivning: nicht-religiöse Namensfeiern",q:"namngivningsceremoni minnesbok",m:"Namensfeier",p:"Zugehörigkeit",st:"naturalistisch",mo:"Landschaft",ma:"Naturpapier",te:"Stempel",pr:"Gästebuch",s:[24,30,18,12],f:[64,58,70,2.6,60,48],r:[86,78,84,72,70,50],stg:1,prev:0,prob:.6,win:30,gap:"Gästebuch für Namensfeiern ohne religiöse Symbolik",why:"Ein Ritual, das es in unseren Kernmärkten so kaum gibt – in Schweden wächst es deutlich schneller als europaweit."},
-  {id:"se3",n:"Studenten-Abschlussboxen",q:"studentpresent minneslåda",m:"Abschluss",p:"Selbstausdruck",st:"grafisch",mo:"Sterne",ma:"Kraftkarton",te:"Vinyl",pr:"Box",s:[6,8,26,20],f:[50,44,40,1.7,45,70],r:[72,70,62,60,74,72],stg:1,prev:1,prob:.52,win:12,gap:null,why:"Kaufintention auf Etsy steigt, visuell eher unauffällig."},
-  {id:"se4",n:"Gestickte Monogramme auf Hochzeitsgästebüchern",q:"broderad gästbok bröllop",m:"Hochzeit",p:"Beziehung",st:"heritage",mo:"Monogramm",ma:"Baumwolle",te:"Stickerei",pr:"Gästebuch",s:[12,27,31,8],f:[60,66,62,1.9,48,40],r:[84,80,76,64,82,46],stg:1,prev:0,prob:.55,win:22,gap:"Gästebuch mit stickbarem Stoffeinband",why:"Stickerei kehrt als Veredelung für Papierprodukte zurück – bislang vor allem geplant, kaum gekauft."},
-  {id:"se5",n:"Skandinavisches Beige-Minimal",q:"minimalistisk fotoalbum",m:"Geburt",p:"Bewahrung",st:"minimalistisch",mo:"Linienillustration",ma:"Leinen",te:"Prägung",pr:"Album",s:[-2,1,-4,3],f:[20,15,10,0.7,85,55],r:[70,60,58,85,60,55],stg:3,prev:3,prob:.8,win:0,gap:null,why:"In Schweden längst Baseline. Europaweit laut, hier aber nicht ungewöhnlich."},
-  {id:"se6",n:"Pressblumen-Resin-Lesezeichen",q:"pressade blommor resin",m:"Freundschaft",p:"Beziehung",st:"botanisch",mo:"Wildblumen",ma:"Kraftkarton",te:"Mixed Media",pr:"Mappe",s:[3,20,44,-8],f:[62,58,55,1.2,35,20],r:[38,50,42,25,30,24],stg:0,prev:0,prob:.41,win:5,gap:null,why:"Kurzlebige Bastel-Dynamik ohne Erinnerungsträger."}],
- creators:[
-  {id:"sec1",h:"@lin.och.papper",pl:"Instagram",rg:"Göteborg",foc:"Naturfarbene Materialien und reduzierte Typografie für Konfirmation und Hochzeit",tags:["Konfirmation","Hochzeit","minimalistisch","Linienillustration","Leinen","Prägung","Erinnerungsbuch"],b:[84,78,76,82,70,80,66],fol:3800,cc:[16,14],mmf:[88,86,90,74,72,70,62],plus:["arbeitet häufig mit Konfirmation","7 hilfreiche Erklärungen in 30 Tagen","drei Veredelungsverfahren","verkauft bereits kleine Serien"],minus:["aktuell kaum Album- oder Papierprodukte im Großformat"],obs:"deine Arbeit mit naturfarbenen Materialien und reduzierter Typografie",prod:"Leinen-Erinnerungsbuch im Querformat, unveredelt",cw:"geschäftliche E-Mail im Profil",src:["Instagram-Profil (öffentlich, geschäftlich)","eigene Website"],rs:1},
-  {id:"sec2",h:"@broderiverkstan",pl:"YouTube",rg:"Uppsala",foc:"Stick-Tutorials für Monogramme und Textileinbände",tags:["Hochzeit","heritage","Monogramm","Baumwolle","Stickerei","Gästebuch"],b:[88,70,74,80,62,84,58],fol:12400,cc:[18,17],mmf:[80,66,58,88,76,52,50],plus:["Zuschauerinnen zeigen Nacharbeiten in den Kommentaren","regelmäßige Live-Fragerunden"],minus:["bisher keine Papierprodukte"],obs:"deine Tutorials für gestickte Monogramme auf Textileinbänden",prod:"Gästebuch mit stickbarem Stoffeinband",cw:"Business-E-Mail im YouTube-Kanal",src:["YouTube-Kanal (öffentlich)"],rs:3},
-  {id:"sec3",h:"@mormors.minnen",pl:"Pinterest",rg:"Umeå",foc:"Namensfeier- und Großeltern-Gästebücher mit Stempeldruck",tags:["Namensfeier","Großeltern","naturalistisch","Landschaft","Naturpapier","Stempel","Gästebuch"],b:[70,82,68,74,64,66,72],fol:1600,cc:[9,8],mmf:[76,84,72,50,68,80,36],plus:["initiiert Pinterest-Gruppenboards zu Namensfeiern","lokale Treffen in der Bibliothek"],minus:["noch keine Verkaufserfahrung"],obs:"deine gestempelten Gästebücher für Namensfeiern",prod:"Gästebuch für Namensfeiern",cw:"Kontaktformular auf dem Blog",src:["Pinterest-Profil (öffentlich)","Blog"],rs:0}],
- leads:[
-  {id:"sel1",n:"Pappershuset Söder",city:"Stockholm",cat:"Papeterie",f:[84,76,82,70,80,78,80,88],gap:"Konfirmationskarten im Sortiment, aber kein passendes Erinnerungsbuch",why:["starkes Konfirmationssegment","minimalistisches Sortiment"],tags:["Konfirmation","minimalistisch","Leinen","Erinnerungsbuch"],pr:["Leinen-Erinnerungsbuch Querformat"],anlass:"Konfirmationssaison ab Februar vorbereiten",rs:1},
-  {id:"sel2",n:"Hantverksboden",city:"Malmö",cat:"Bastel- & Kreativhandel",f:[70,74,60,90,64,62,72,82],gap:"Stickgarn und Stoffe, aber keine veredelbaren Einbände",why:["großes Stick-Sortiment","Kurse am Wochenende"],tags:["Stickerei","Baumwolle","Hochzeit","Gästebuch"],pr:["Gästebuch mit Stoffeinband"],anlass:"Stick-Workshop „Monogramm fürs Gästebuch“",rs:0},
-  {id:"sel3",n:"Bröllopsateljén Väst",city:"Göteborg",cat:"Hochzeitsdienstleister",f:[78,50,86,56,70,68,76,80],gap:"verkauft Deko-Pakete ohne bleibendes Erinnerungsstück",why:["Hochzeitsplanung mit Paketangeboten"],tags:["Hochzeit","Gästebuch","heritage"],pr:["Gästebuch Leinen"],anlass:"Gästebuch als Bestandteil der Hochzeitspakete",rs:0}],
- exec:["Konfirmationsprodukte bewegen sich von klassischem Weiß/Silber in Richtung Naturleinen mit reduzierter Typografie.","Nicht-religiöse Namensfeiern wachsen deutlich schneller als europaweit (CLI 2,6) – ein eigenständiges schwedisches Ritual.","Stickerei wird als Veredelung für Papierprodukte geplant, aber noch kaum gekauft.","Beige-Minimalismus ist in Schweden Baseline und kein Wachstumsfeld."],
- moves:[{t:"Fünf schwedischen Gestalterinnen den Leinen-Querformat-Rohling schicken",d:"Beginn mit @lin.och.papper; Konfirmationssaison beginnt im Februar."},{t:"Gästebuch mit stickbarem Stoffeinband testen",d:"Gemeinsam mit @broderiverkstan eine Materialprobe für Tutorials entwickeln."},{t:"Stockholmer Papeterien mit Konfirmationsfokus ansprechen",d:"Anlass: fehlendes Erinnerungsbuch zur Karte."}],
- dont:[{t:"Kein Beige-Minimal-Album als Neuheit platzieren",d:"Mainstream, CLI 0,7 – es entsteht keine neue Bedeutung."},{t:"Resin-Lesezeichen ignorieren",d:"Nur TikTok-Dynamik, keine Memory Relevance."}],
- aes:{then:["#FFFFFF","#E4E6E8","#C0C4C8","#D8CFC0","#A8ACB0","#F4F4F2"],now:["#E2DCCD","#CBBFA6","#9E8F72","#5F6A5C","#EDE8DC","#3F4A4A"],cluster:"Ungebleichtes Leinen + eine Zeile Blindprägung + feine Linienillustration von Küstenlandschaften.",rows:[["Material","Weißkarton, Silberfolie","Naturleinen, ungestrichenes Papier"],["Typografie","geschwungene Script","schmale Grotesk, eine Zeile"],["Motive","Kreuz, Taube","Landschaft, Linie, Wildblume"],["Formensprache","zentriert, verziert","asymmetrisch, sehr reduziert"]]},
- moments:[{n:"Namensfeier",d:29,k:"neu",note:"nicht-religiöse Alternative zur Taufe"},{n:"Konfirmation",d:17,k:"verändert sich",note:"Weiß/Silber → Naturleinen"},{n:"Abschluss",d:12,k:"steigt"},{n:"Hochzeit",d:4,k:"steigt"},{n:"Taufe",d:-9,k:"fällt"}],
- tech:[["Stickerei",31],["Prägung",16],["Stempel",11],["Vinyl",6],["Lasergravur",2],["Heißfolie",-14]],
- adj:[{n:"Namensfeiern",d:"Wachsendes Ritual ohne passende Gästebücher; Taufprodukte funktionieren wegen der Symbolik nicht."}]},
-
-IT:{name:"Italien",radar:"Italy Memory Market Radar",
- trends:[
-  {id:"it1",n:"Olivenzweig + Creme + feine Serifen zur Hochzeit",q:"album matrimonio personalizzato ulivo",m:"Hochzeit",p:"Ritual",st:"modern classic",mo:"Olivenzweig",ma:"Leinen",te:"Heißfolie",pr:"Album",s:[14,33,20,24],f:[60,58,54,1.8,70,68],r:[90,84,80,88,84,70],stg:2,prev:2,prob:.73,win:26,gap:null,why:"Mediterrane Botanik verdrängt Rosenmotive; Heißfolie bleibt, wird aber feiner und kleiner."},
-  {id:"it2",n:"Laurea-Erinnerungsboxen mit Lorbeer",q:"scatola ricordi laurea personalizzata",m:"Abschluss",p:"Selbstausdruck",st:"grafisch",mo:"Olivenzweig",ma:"Kraftkarton",te:"Lasergravur",pr:"Box",s:[22,18,30,35],f:[70,66,62,2.4,55,80],r:[78,80,70,62,82,80],stg:1,prev:0,prob:.62,win:14,gap:"Robuste Erinnerungsbox mit gravierbarem Deckel für Laurea-Feiern",why:"Der Studienabschluss ist in Italien ein Familienfest; der Lift gegenüber Europa ist ungewöhnlich hoch."},
-  {id:"it3",n:"Prima Comunione: Naturleinen + Gold statt Silber",q:"album prima comunione lino",m:"Kommunion",p:"Ritual",st:"romantisch",mo:"Kreuz",ma:"Leinen",te:"Prägung",pr:"Album",s:[11,26,9,17],f:[54,52,58,1.6,64,62],r:[92,80,82,90,80,64],stg:1,prev:1,prob:.58,win:30,gap:"Kommunionsalbum in Naturleinen mit Prägefläche",why:"Die Farbwelt der Kommunion verschiebt sich; Planung auf Pinterest geht dem Kauf voraus."},
-  {id:"it4",n:"Sticker-Scrapbooking-Reisetagebücher",q:"diario di viaggio scrapbooking",m:"Reise",p:"Selbstausdruck",st:"verspielt",mo:"Landschaft",ma:"Kraftkarton",te:"Mixed Media",pr:"Erinnerungsbuch",s:[5,30,40,-3],f:[58,50,48,1.0,40,25],r:[55,72,50,40,55,28],stg:0,prev:0,prob:.46,win:8,gap:null,why:"Inspirationsstark, kommerziell noch nicht belegt.",ex:true},
-  {id:"it5",n:"Gestickte Initialen: vom Babytuch zum Album",q:"album nascita ricamato",m:"Geburt",p:"Beziehung",st:"heritage",mo:"Monogramm",ma:"Baumwolle",te:"Stickerei",pr:"Album",s:[9,15,12,14],f:[45,40,50,1.3,58,55],r:[80,78,72,66,76,56],stg:1,prev:1,prob:.54,win:20,gap:null,why:"Tradition der Aussteuer-Stickerei wandert auf Papierprodukte."},
-  {id:"it6",n:"Konfetti-Maximalismus zur Hochzeit",q:"matrimonio coriandoli",m:"Hochzeit",p:"Selbstausdruck",st:"maximalistisch",mo:"Ornament",ma:"Kraftkarton",te:"Vinyl",pr:"Rahmen",s:[2,6,52,-10],f:[66,62,58,1.1,28,15],r:[35,30,40,20,25,18],stg:0,prev:0,prob:.39,win:4,gap:null,why:"Reines Video-Phänomen."}],
- creators:[
-  {id:"itc1",h:"@carta.e.lino",pl:"Instagram",rg:"Bologna",foc:"Hochzeitsalben mit Olivenzweig-Illustration und feiner Heißfolie",tags:["Hochzeit","modern classic","Olivenzweig","Leinen","Heißfolie","Album"],b:[76,72,74,70,68,78,64],fol:5200,cc:[15,13],mmf:[86,88,92,80,66,64,70],plus:["Portfolio fast vollständig Hochzeit","zeigt Veredelung Schritt für Schritt","verkauft an Hochzeitsplanerinnen"],minus:["kaum Aktivität außerhalb der Hochzeitssaison"],obs:"deine Hochzeitsalben mit Olivenzweig-Illustration und feiner Heißfolie",prod:"Leinen-Hochzeitsalbum, unveredelt",cw:"geschäftliche E-Mail auf der Website",src:["Instagram-Profil (öffentlich, geschäftlich)","Website"],rs:4},
-  {id:"itc2",h:"@ricami.di.giulia",pl:"Instagram",rg:"Lecce",foc:"Traditionelle Stickerei, neu interpretiert für Geburt und Kommunion",tags:["Geburt","Kommunion","heritage","Monogramm","Baumwolle","Stickerei","Album"],b:[80,76,80,78,72,76,70],fol:2100,cc:[12,11],mmf:[84,86,70,90,74,82,48],plus:["organisiert Stick-Treffen in der Region","andere zeigen „inspiriert von“-Arbeiten"],minus:["bisher ausschließlich Textil"],obs:"deine gestickten Initialen für Geburt und Kommunion",prod:"Babyalbum mit stickbarem Einband",cw:"Business-Kontakt im Profil",src:["Instagram-Profil (öffentlich, geschäftlich)"],rs:0},
-  {id:"itc3",h:"@lab.laurea.torino",pl:"TikTok",rg:"Turin",foc:"Laser-Workshops für Laurea- und Abschlussgeschenke",tags:["Abschluss","grafisch","Olivenzweig","Kraftkarton","Lasergravur","Box"],b:[66,84,58,76,82,56,74],fol:9400,cc:[22,16],mmf:[78,70,64,70,84,74,76],plus:["initiiert Challenges zu Laurea-Geschenken","leitet einen Makerspace-Kurs"],minus:["Completion-Rate unter dem Länderschnitt"],obs:"deine gravierten Laurea-Boxen mit Lorbeermotiv",prod:"Gravierbare Erinnerungsbox",cw:"Makerspace-Website",src:["TikTok-Profil (Business)","Makerspace-Website"],rs:0}],
- leads:[
-  {id:"itl1",n:"Bomboniere Belfiore",city:"Neapel",cat:"Bomboniere & Geschenke",f:[88,78,92,72,82,70,86,84],gap:"führt Gastgeschenke für Kommunion und Hochzeit, aber kein Erinnerungsalbum",why:["Kernkundschaft: Kommunion, Hochzeit, Laurea","Beratung vor Ort"],tags:["Kommunion","Hochzeit","Abschluss","Album","Box"],pr:["Kommunionsalbum Naturleinen","Laurea-Box"],anlass:"Album als Ergänzung zu den Bomboniere-Paketen",rs:3},
-  {id:"itl2",n:"Cartoleria Il Quaderno",city:"Florenz",cat:"Papeterie",f:[80,74,74,76,76,80,70,86],gap:"hochwertige Papiere, aber keine veredelbaren Rohlinge",why:["Handwerksfokus, Buchbinderei-Tradition"],tags:["Hochzeit","Leinen","Heißfolie","Album"],pr:["Leinen-Hochzeitsalbum"],anlass:"Rohling-Linie für die Hochzeitssaison",rs:0},
-  {id:"itl3",n:"Atelier Sposa Luce",city:"Bari",cat:"Brautmode",f:[74,48,86,50,70,72,74,76],gap:"keine Erinnerungsprodukte im Paket",why:["Brautmode mit Accessoire-Bereich"],tags:["Hochzeit","romantisch","Gästebuch"],pr:["Gästebuch Olivenzweig"],anlass:"Gästebuch als Beigabe zum Brautkleid-Kauf",rs:0}],
- exec:["Mediterrane Botanik (Olivenzweig) verdrängt Rosen im Hochzeitssegment; Heißfolie wird feiner.","Laurea-Erinnerungsboxen zeigen einen spezifisch italienischen Lift (CLI 2,4).","Die Kommunion verschiebt sich von Silber zu Naturleinen und Gold – noch in der Planungsphase."],
- moves:[{t:"Fünf italienischen Gestalterinnen den Leinen-Hochzeitsrohling schicken",d:"Mit @carta.e.lino ist bereits eine Gestalterin im Test."},{t:"Laurea-Box mit gravierbarem Deckel prototypen",d:"Testlauf über den Turiner Makerspace."},{t:"Bomboniere-Händler in Kampanien und Apulien kontaktieren",d:"Anlass: Album ergänzt das Gastgeschenk-Paket."}],
- dont:[{t:"Konfetti-Maximalismus nicht bedienen",d:"TikTok-Phänomen ohne Kaufsignal."}],
- aes:{then:["#FFFFFF","#F1D9DC","#D9A7B0","#C9C9C9","#E8E3DA","#B8B8B8"],now:["#F2EBDD","#DCCFB4","#8A8F62","#6B7248","#C8A45A","#FAF6EE"],cluster:"Creme + Olivgrün + feine Serifenschrift + kleine Goldfolie als Akzent.",rows:[["Material","Seidenpapier, Satin","Naturleinen, Büttenpapier"],["Typografie","verschnörkelte Script","feine Serife, Kapitälchen"],["Motive","Rosen, Herzen","Olivenzweig, Lorbeer, Zitrone"],["Formensprache","opulent","klassisch, symmetrisch, leicht"]]},
- moments:[{n:"Abschluss",d:26,k:"steigt",note:"Laurea als Familienfest"},{n:"Kommunion",d:14,k:"verändert sich",note:"Silber → Naturleinen/Gold"},{n:"Hochzeit",d:9,k:"steigt"},{n:"Geburt",d:5,k:"steigt"},{n:"Taufe",d:-4,k:"fällt"}],
- tech:[["Lasergravur",22],["Stickerei",15],["Heißfolie",8],["Prägung",7],["Vinyl",-3],["Sublimation",-9]],
- adj:[{n:"Laurea",d:"Emotional stark, familiär gefeiert – wir bedienen den Moment bisher nicht."}]},
-
-FR:{name:"Frankreich",radar:"France Memory Market Radar",
- trends:[
-  {id:"fr1",n:"Creme + Serifen + botanische Illustration + handgezeichnete Initialen",q:"livre d'or mariage personnalisé",m:"Hochzeit",p:"Ritual",st:"romantisch",mo:"Linienillustration",ma:"Naturpapier",te:"Heißfolie",pr:"Gästebuch",s:[13,36,18,21],f:[62,60,66,1.7,62,64],r:[88,82,80,84,82,66],stg:2,prev:1,prob:.69,win:24,gap:null,why:"Neuer Stilcluster im Hochzeitssegment, visuell klar vom bisherigen Schwerpunkt entfernt."},
-  {id:"fr2",n:"Livre de naissance mit Aquarell-Wildblumen",q:"livre de naissance personnalisé",m:"Geburt",p:"Bewahrung",st:"naturalistisch",mo:"Wildblumen",ma:"Naturpapier",te:"Stempel",pr:"Erinnerungsbuch",s:[17,24,10,22],f:[58,52,56,1.5,68,66],r:[90,80,86,74,70,68],stg:2,prev:2,prob:.7,win:28,gap:"Erinnerungsbuch zur Geburt mit aquarelltauglichem Papier",why:"Stabil wachsend in Nachfrage und Kauf; Aquarell ersetzt Fotodruck."},
-  {id:"fr3",n:"UV-DTF auf Leinenboxen zur Taufe",q:"boîte souvenir baptême personnalisée",m:"Taufe",p:"Bewahrung",st:"grafisch",mo:"Monogramm",ma:"Leinen",te:"UV-DTF",pr:"Box",s:[19,12,34,26],f:[68,72,64,2.2,44,60],r:[72,82,64,76,90,62],stg:1,prev:0,prob:.56,win:16,gap:null,why:"Eine neue Veredelungstechnik trifft auf ein bestehendes Produkt."},
-  {id:"fr4",n:"EVJF-Erinnerungsalben",q:"album souvenir evjf",m:"Freundschaft",p:"Zugehörigkeit",st:"verspielt",mo:"Schleifen",ma:"Kraftkarton",te:"Vinyl",pr:"Album",s:[10,28,38,6],f:[64,60,58,1.9,40,34],r:[62,74,66,58,70,40],stg:0,prev:0,prob:.48,win:10,gap:null,why:"Freundinnen-Rituale vor der Hochzeit werden zum eigenen Erinnerungsmoment.",ex:true},
-  {id:"fr5",n:"Schleifen ersetzen Wildblumen",q:"album baptême noeud",m:"Taufe",p:"Ritual",st:"romantisch",mo:"Schleifen",ma:"Samt",te:"Heißfolie",pr:"Album",s:[8,32,25,4],f:[55,62,60,1.6,50,38],r:[76,70,72,70,74,42],stg:1,prev:0,prob:.53,win:18,gap:null,why:"Motivwechsel: Botanik bleibt, aber die Wildblume weicht der Schleife."},
-  {id:"fr6",n:"Klassisches Scrapbooking",q:"scrapbooking album",m:"Familie",p:"Bewahrung",st:"nostalgisch",mo:"Ornament",ma:"Kraftkarton",te:"Mixed Media",pr:"Album",s:[-12,-6,-9,-14],f:[15,10,8,0.8,70,30],r:[60,68,55,62,60,35],stg:5,prev:4,prob:.72,win:0,gap:null,why:"Rückläufig in allen Quellen."}],
- creators:[
-  {id:"frc1",h:"@atelier.pivoine.lyon",pl:"Instagram",rg:"Lyon",foc:"Botanische Linienillustration und handgezeichnete Initialen für Hochzeitspapeterie",tags:["Hochzeit","romantisch","Linienillustration","Naturpapier","Heißfolie","Handlettering","Gästebuch"],b:[78,76,72,80,70,82,68],fol:6300,cc:[17,15],mmf:[88,88,84,72,70,72,70],plus:["Portfolio deckt sich mit dem neuen Stilcluster","gibt Workshops in zwei Lyoner Papeterien","antwortet ausführlich auf Technikfragen"],minus:["bisher kein Album-Format"],obs:"deine botanischen Linienillustrationen mit handgezeichneten Initialen",prod:"Naturpapier-Gästebuch, unveredelt",cw:"geschäftliche E-Mail auf der Website",src:["Instagram-Profil (öffentlich, geschäftlich)","Website","Workshop-Kalender der Papeterien"],rs:5},
-  {id:"frc2",h:"@maison.encre.douce",pl:"Etsy + Instagram",rg:"Bordeaux",foc:"Aquarell-Geburtsbücher und Stempelsets",tags:["Geburt","naturalistisch","Wildblumen","Naturpapier","Stempel","Erinnerungsbuch"],b:[72,68,70,66,64,74,56],fol:4100,cc:[13,12],mmf:[84,86,74,66,70,60,78],plus:["verkauft Geburtsbücher erfolgreich auf Etsy","zeigt Kundinnen-Ergebnisse"],minus:["wenig Initiationsverhalten"],obs:"deine Aquarell-Geburtsbücher mit Wildblumen-Stempeln",prod:"Erinnerungsbuch zur Geburt, aquarelltauglich",cw:"Etsy-Shopnachricht",src:["Etsy-Shop","Instagram-Profil (geschäftlich)"],rs:1},
-  {id:"frc3",h:"@les.jolis.souvenirs",pl:"TikTok",rg:"Lille",foc:"UV-DTF- und Vinyl-Personalisierung für Taufe und EVJF",tags:["Taufe","Freundschaft","grafisch","Monogramm","UV-DTF","Vinyl","Box"],b:[62,80,56,70,86,58,64],fol:21000,cc:[24,14],mmf:[74,70,68,84,86,54,72],plus:["früheste sichtbare UV-DTF-Anwenderin im Suchraum","Follower posten Nachbauten"],minus:["viele Experimente ohne gezeigtes Ergebnis"],obs:"deine UV-DTF-Monogramme auf Leinenboxen",prod:"Leinenbox für UV-DTF",cw:"Business-E-Mail im Profil",src:["TikTok-Profil (Business)"],rs:0}],
- leads:[
-  {id:"frl1",n:"Maison Papier Bonheur",city:"Nantes",cat:"Papeterie & Hochzeit",f:[88,80,86,84,78,86,82,88],gap:"bisher kaum hochwertige veredelbare Alben",why:["führt Papeterie und Hochzeit","starke lokale Instagram-Community","veranstaltet Workshops"],tags:["Hochzeit","romantisch","Linienillustration","Naturpapier","Gästebuch","Album"],pr:["Naturpapier-Gästebuch","Leinen-Hochzeitsalbum"],anlass:"Workshop „Initialen & Heißfolie“ mit Rohlingen",rs:4},
-  {id:"frl2",n:"Le Comptoir Créatif",city:"Toulouse",cat:"Bastel- & Kreativhandel",f:[72,78,64,90,66,62,70,80],gap:"UV-DTF-Drucker im Verleih, aber keine passenden Rohlinge",why:["Maker-Kundschaft mit UV-DTF"],tags:["UV-DTF","Vinyl","Box","Taufe"],pr:["Leinenbox für UV-DTF"],anlass:"Rohlinge für den UV-DTF-Verleih",rs:0},
-  {id:"frl3",n:"Studio Lumière Naissance",city:"Paris",cat:"Fotostudio (Baby)",f:[80,52,90,56,70,76,78,78],gap:"Geburtsshootings ohne Erinnerungsbuch",why:["Neugeborenen-Fokus"],tags:["Geburt","Erinnerungsbuch","naturalistisch"],pr:["Erinnerungsbuch zur Geburt"],anlass:"Livre de naissance als Shooting-Paket",rs:0}],
- exec:["Neuer Stilcluster im Hochzeitssegment: Creme + feine Serifenschrift + botanische Illustration + handgezeichnete Initialen.","UV-DTF auf Leinenboxen wächst schneller als jede andere Veredelung – noch ohne breite Kaufbestätigung.","Motivwechsel bei der Taufe: Botanik bleibt, Schleifen ersetzen Wildblumen.","Klassisches Scrapbooking ist rückläufig."],
- moves:[{t:"Nantes und Lyon als Pilotregion: zwei Papeterien, drei Gestalterinnen",d:"Maison Papier Bonheur und @atelier.pivoine.lyon arbeiten bereits im selben Stilcluster."},{t:"Leinenbox auf UV-DTF-Tauglichkeit prüfen",d:"Haftung und Oberflächenwirkung mit @les.jolis.souvenirs testen."},{t:"Aquarelltaugliches Papier für das Geburtsbuch bemustern",d:"Anfrage aus Bordeaux zeigt Bedarf."}],
- dont:[{t:"Nicht in Scrapbooking-Zubehör investieren",d:"In allen Quellen rückläufig."}],
- aes:{then:["#FFFFFF","#F3E6E8","#D6B8BE","#9FA7B3","#E9E9E9","#C6A8AE"],now:["#F4EDE1","#E6D9C3","#B7A07A","#7E8B6C","#C9A46A","#2F3A36"],cluster:"Creme + feine Serifenschrift + botanische Illustration + handgezeichnete Initialen.",rows:[["Material","Glanzkarton","Naturpapier, Büttenrand"],["Typografie","moderne Script","feine Serife mit Initiale"],["Motive","Wildblumen, Herzen","Linienbotanik, Schleifen"],["Formensprache","verspielt","klassisch, luftig"]]},
- moments:[{n:"Geburt",d:18,k:"steigt"},{n:"Freundschaft",d:15,k:"neu",note:"EVJF als eigenes Erinnerungsritual"},{n:"Hochzeit",d:11,k:"verändert sich",note:"neuer Stilcluster"},{n:"Taufe",d:7,k:"verändert sich",note:"Schleife statt Wildblume"},{n:"Familie",d:-10,k:"fällt"}],
- tech:[["UV-DTF",34],["Handlettering",14],["Heißfolie",9],["Stempel",8],["Vinyl",3],["Mixed Media",-12]],
- adj:[{n:"EVJF / Freundinnen-Rituale",d:"Gruppenerinnerung vor der Hochzeit – bisher kein Produkt für diesen Moment."}]},
-
-PL:{name:"Polen",radar:"Poland Memory Market Radar",
- trends:[
-  {id:"pl1",n:"Weiß + Goldprägung + religiöse Symbolik + moderne Typografie",q:"album chrzest personalizowany",m:"Taufe",p:"Ritual",st:"modern classic",mo:"Kreuz",ma:"Weißkarton",te:"Prägung",pr:"Album",s:[18,29,22,27],f:[64,62,58,2.3,66,70],r:[92,80,82,88,84,72],stg:2,prev:1,prob:.7,win:26,gap:null,why:"Tradition bleibt, die Typografie wird modern – eine Verbindung, die es so in keinem anderen Land gibt."},
-  {id:"pl2",n:"Komunia: gravierte Holz-Erinnerungsboxen",q:"pudełko na pamiątki komunia",m:"Kommunion",p:"Bewahrung",st:"rustikal",mo:"Taube",ma:"Holz",te:"Lasergravur",pr:"Box",s:[25,20,30,38],f:[72,68,56,2.6,58,82],r:[88,82,76,60,86,82],stg:1,prev:0,prob:.64,win:12,gap:"Box mit Holzdeckel für Lasergravur und Papier-Innenleben",why:"Stark steigende Kaufintention; die Holzoptik ist hier neu, nicht Baseline."},
-  {id:"pl3",n:"Hochzeitsgästebücher mit Fototransfer",q:"księga gości zdjęcia",m:"Hochzeit",p:"Zugehörigkeit",st:"nostalgisch",mo:"Ornament",ma:"Leinen",te:"Fototransfer",pr:"Gästebuch",s:[10,22,26,12],f:[52,50,48,1.4,55,54],r:[78,74,76,72,70,56],stg:1,prev:1,prob:.55,win:20,gap:null,why:"Gäste gestalten mit – das Gästebuch wird Gemeinschaftsarbeit."},
-  {id:"pl4",n:"Wycinanki-Folk-Ornamentik als Papercut",q:"wycinanki ślub",m:"Hochzeit",p:"Zugehörigkeit",st:"folk",mo:"Ornament",ma:"Naturpapier",te:"Papercut",pr:"Album",s:[14,34,40,18],f:[66,70,76,3.1,50,48],r:[80,82,86,70,78,50],stg:1,prev:0,prob:.6,win:30,gap:"Album mit Fensterausschnitt für Papercut-Einlagen",why:"Höchster Cultural Lift im gesamten Radar: Hier passiert etwas spezifisch Polnisches."},
-  {id:"pl5",n:"Pastell-Babyalben",q:"album dla dziecka pastelowy",m:"Geburt",p:"Bewahrung",st:"verspielt",mo:"Sterne",ma:"Weißkarton",te:"Vinyl",pr:"Album",s:[-3,-5,0,-2],f:[20,18,14,0.9,78,48],r:[76,64,60,80,58,52],stg:4,prev:3,prob:.66,win:0,gap:null,why:"Wachstum ist zum Stillstand gekommen."},
-  {id:"pl6",n:"Neon-Schriftzüge als Deko",q:"neon ślub napis",m:"Hochzeit",p:"Selbstausdruck",st:"grafisch",mo:"Ornament",ma:"Kraftkarton",te:"Vinyl",pr:"Rahmen",s:[0,8,49,-7],f:[64,60,52,1.0,30,20],r:[32,28,30,18,22,20],stg:0,prev:0,prob:.4,win:4,gap:null,why:"Nur Video-Dynamik."}],
- creators:[
-  {id:"plc1",h:"@papierowe.chwile",pl:"Instagram",rg:"Krakau",foc:"Taufalben mit Goldprägung und moderner Typografie",tags:["Taufe","Kommunion","modern classic","Kreuz","Weißkarton","Prägung","Album"],b:[74,70,78,72,60,76,62],fol:4700,cc:[14,13],mmf:[86,92,86,80,62,66,72],plus:["deckt den stärksten polnischen Trend fast exakt ab","verkauft an Pfarrgemeinden-Läden"],minus:["experimentiert wenig mit neuen Techniken"],obs:"deine Taufalben mit Goldprägung und moderner Typografie",prod:"Taufalbum Weißkarton mit Prägefläche",cw:"geschäftliche E-Mail im Profil",src:["Instagram-Profil (öffentlich, geschäftlich)"],rs:3},
-  {id:"plc2",h:"@wycinanki.nowoczesne",pl:"Instagram + YouTube",rg:"Łódź",foc:"Moderne Wycinanki-Scherenschnitte für Hochzeit und Wohnen",tags:["Hochzeit","folk","Ornament","Naturpapier","Papercut","Album"],b:[86,88,80,90,78,82,84],fol:1300,cc:[11,10],mmf:[88,78,62,72,86,90,44],plus:["Peer-Activation-Spitzenwert im Land","gibt Kurse im Kulturhaus","verbindet Folk- und Design-Community"],minus:["kaum Verkaufserfahrung"],obs:"deine modernen Wycinanki-Scherenschnitte",prod:"Album mit Fenster für Papercut-Einlagen",cw:"Kontakt über das Kulturhaus-Kursprogramm",src:["Instagram-Profil (öffentlich)","YouTube-Kanal","Kursprogramm"],rs:1},
-  {id:"plc3",h:"@drewniane.pamiatki",pl:"Allegro + TikTok",rg:"Posen",foc:"Gravierte Holzboxen für die Erstkommunion",tags:["Kommunion","rustikal","Taube","Holz","Lasergravur","Box"],b:[58,64,54,60,72,56,48],fol:7800,cc:[19,16],mmf:[80,88,62,84,58,42,86],plus:["hoher Absatz in der Kommunionssaison"],minus:["Community-Interaktion gering"],obs:"deine gravierten Kommunionsboxen mit Taubenmotiv",prod:"Box mit Holzdeckel und Papier-Innenleben",cw:"Allegro-Shopnachricht",src:["Allegro-Shop","TikTok-Profil (Business)"],rs:0}],
- leads:[
-  {id:"pll1",n:"Pamiątki Komunijne Anioł",city:"Kattowitz",cat:"Geschenke Kommunion & Taufe",f:[90,82,94,62,84,66,86,82],gap:"verkauft Figuren und Kerzen, aber keine Erinnerungsboxen",why:["Fachgeschäft für Kommunion","Saisonspitze April–Mai"],tags:["Kommunion","Taufe","Box","Album","Kreuz","Taube"],pr:["Kommunionsbox Holzdeckel","Taufalbum Prägung"],anlass:"Sortiment für die Kommunionssaison 2027",rs:1},
-  {id:"pll2",n:"Salon Ślubny Biel",city:"Warschau",cat:"Brautmode",f:[76,50,84,52,72,74,76,80],gap:"keine Gästebücher im Angebot",why:["gehobene Brautmode"],tags:["Hochzeit","Gästebuch","folk"],pr:["Gästebuch mit Fototransfer-Seiten"],anlass:"Gästebuch als Beigabe",rs:0},
-  {id:"pll3",n:"Kreatywnia Gdańsk",city:"Danzig",cat:"Bastel- & Kreativhandel",f:[70,76,60,88,68,64,70,82],gap:"Papercut-Werkzeuge ohne passende Trägerprodukte",why:["Scherenschnitt-Kurse"],tags:["Papercut","folk","Naturpapier","Album"],pr:["Fenster-Album für Papercut"],anlass:"Wycinanki-Workshop mit Album",rs:0}],
- exec:["Zunehmende Kombination aus starkem Weiß + Goldprägung + religiöser Symbolik + moderner Typografie.","Wycinanki-Ornamentik als Papercut erreicht den höchsten Cultural Lift im gesamten Radar (CLI 3,1).","Kommunionsboxen aus Holz zeigen die stärkste Kaufintention des Landes.","Pastell-Babyalben sind gesättigt."],
- moves:[{t:"Fenster-Album für Papercut-Einlagen mit @wycinanki.nowoczesne entwickeln",d:"Co-Creation statt Produktvorgabe; Kurs im Kulturhaus als Testfeld."},{t:"Kommunionsbox mit Holzdeckel bis Januar bemustern",d:"Die Saison beginnt im April; Händler ordern ab Februar."},{t:"Sieben Kommunions-Fachgeschäfte in Schlesien kontaktieren",d:"Anlass: Box ergänzt Figuren und Kerzen."}],
- dont:[{t:"Kein Pastell-Babyalbum-Relaunch",d:"Segment gesättigt."},{t:"Neon-Schriftzüge ignorieren",d:"Keine Memory Relevance."}],
- aes:{then:["#FFFFFF","#F2EFE8","#DCD6CA","#BFB8A8","#E6E6E6","#C9B98E"],now:["#FFFFFF","#F6F2E7","#C9A54B","#1F2A3A","#B7302F","#2F5B3A"],cluster:"Reines Weiß + Goldprägung + religiöse Symbolik + moderne Grotesk; daneben ein zweiter Cluster mit Folk-Rot und -Grün.",rows:[["Material","Weißkarton, Tüll","Weißkarton, Naturpapier, Holz"],["Typografie","klassische Script","moderne Grotesk"],["Motive","Engel, Kelch","Kreuz, Taube, Wycinanki"],["Formensprache","ornamental","geometrisch, Scherenschnitt"]]},
- moments:[{n:"Kommunion",d:27,k:"steigt"},{n:"Taufe",d:15,k:"verändert sich",note:"moderne Typografie"},{n:"Hochzeit",d:10,k:"steigt"},{n:"Geburt",d:-3,k:"fällt"}],
- tech:[["Papercut",36],["Lasergravur",27],["Prägung",18],["Fototransfer",12],["Vinyl",-2],["Sublimation",-6]],
- adj:[{n:"Kommunion",d:"Stärkster Moment im Land, heute nicht in unserem Kernsortiment."}]},
-
-EN:{name:"England",radar:"England Memory Market Radar",uk:true,
- trends:[
-  {id:"en1",n:"Personalisierte Gedenkboxen für Haustiere",q:"pet memorial box personalised",m:"Haustier",p:"Bewahrung",st:"naturalistisch",mo:"Pfotenabdruck",ma:"Holz",te:"Lasergravur",pr:"Box",s:[20,26,24,30],f:[66,60,64,1.8,70,76],r:[80,84,90,62,84,76],stg:2,prev:1,prob:.72,win:20,gap:"Gedenkbox mit Fach für Halsband und Fotos",why:"Breit bestätigt in allen Quellen; Google liefert subregional England.",geo:"high"},
-  {id:"en2",n:"Gästebücher für „Celebration of Life“",q:"celebration of life guest book",m:"Trauer",p:"Vermächtnis",st:"modern classic",mo:"Linienillustration",ma:"Leinen",te:"Heißfolie",pr:"Gästebuch",s:[12,18,6,16],f:[50,48,62,1.6,64,62],r:[84,78,92,78,76,62],stg:1,prev:0,prob:.58,win:30,gap:"Gedenk-Gästebuch in gedämpftem Leinen",why:"Trauerfeiern werden persönlicher; ein Ritual verschiebt sich von Trauer zu Würdigung.",geo:"high",ex:true},
-  {id:"en3",n:"Bestickte Hochzeitsgästebücher",q:"embroidered guest book wedding",m:"Hochzeit",p:"Beziehung",st:"heritage",mo:"Monogramm",ma:"Leinen",te:"Stickerei",pr:"Gästebuch",s:[10,30,28,12],f:[58,62,56,1.3,50,46],r:[84,78,76,82,82,48],stg:1,prev:1,prob:.53,win:22,gap:null,why:"Viel Planung, wenig Kauf – noch Inspirationsphase.",geo:"uk"},
-  {id:"en4",n:"„Nana & Grandad“-Erinnerungsjournale",q:"grandparent memory journal",m:"Großeltern",p:"Vermächtnis",st:"nostalgisch",mo:"Familienbaum",ma:"Leinen",te:"Prägung",pr:"Erinnerungsbuch",s:[15,22,14,24],f:[56,50,52,1.2,66,68],r:[86,88,90,70,78,68],stg:2,prev:2,prob:.66,win:24,gap:null,why:"Stabil wachsend; parallel zur Entwicklung in Deutschland.",geo:"high"},
-  {id:"en5",n:"Vinyl-Milestone-Boards fürs Baby",q:"baby milestone board",m:"Geburt",p:"Selbstausdruck",st:"verspielt",mo:"Sterne",ma:"Holz",te:"Vinyl",pr:"Rahmen",s:[4,6,20,2],f:[30,22,18,0.9,72,50],r:[60,62,55,40,58,50],stg:4,prev:3,prob:.62,win:0,gap:null,why:"Wachstum flacht ab.",geo:"uk"},
-  {id:"en6",n:"Y2K-Glitter-Scrapbooks",q:"y2k scrapbook",m:"Freundschaft",p:"Selbstausdruck",st:"maximalistisch",mo:"Sterne",ma:"Kraftkarton",te:"Mixed Media",pr:"Erinnerungsbuch",s:[0,14,46,-4],f:[64,60,56,1.1,32,18],r:[40,52,36,28,34,20],stg:0,prev:0,prob:.42,win:5,gap:null,why:"Kulturelle Dynamik ohne Kaufbestätigung.",geo:"uk"}],
- creators:[
-  {id:"enc1",h:"@paws.and.pages",pl:"Instagram",rg:"Leeds",foc:"Gedenk-Keepsakes für Haustiere mit Lasergravur",tags:["Haustier","naturalistisch","Pfotenabdruck","Holz","Lasergravur","Box"],b:[80,72,78,76,64,86,62],fol:5600,cc:[15,14],mmf:[86,92,78,82,64,66,80],plus:["einfühlsame, hilfreiche Antworten an Trauernde","vernetzt mit Tierarztpraxen der Region"],minus:["kaum Papierprodukte"],obs:"deine gravierten Gedenkboxen für Haustiere",prod:"Gedenkbox mit Fach für Halsband und Fotos",cw:"geschäftliche E-Mail auf der Website",src:["Instagram-Profil (öffentlich, geschäftlich)","Website"],rs:6},
-  {id:"enc2",h:"@thelinenpress.studio",pl:"Instagram + Etsy",rg:"Bristol",foc:"Leinen-Journale mit Blindprägung für Großeltern und Gedenkfeiern",tags:["Großeltern","Trauer","nostalgisch","Familienbaum","Leinen","Prägung","Erinnerungsbuch"],b:[76,74,72,74,62,80,70],fol:3300,cc:[12,11],mmf:[84,86,90,74,64,70,76],plus:["arbeitet in zwei wachsenden Trends zugleich","zeigt Buchbinde-Prozesse"],minus:["unregelmäßige Postingfrequenz"],obs:"deine geprägten Leinen-Journale für Großeltern",prod:"Leinen-Erinnerungsbuch mit Prägefläche",cw:"Etsy-Shopnachricht",src:["Instagram-Profil (geschäftlich)","Etsy-Shop"],rs:5},
-  {id:"enc3",h:"@stitchandkeep",pl:"TikTok",rg:"Norwich",foc:"Stick-Tutorials für Hochzeitsgästebücher",tags:["Hochzeit","heritage","Monogramm","Leinen","Stickerei","Gästebuch"],b:[72,82,60,78,80,62,66],fol:14200,cc:[20,13],mmf:[80,70,72,86,78,56,52],plus:["Challenges mit hoher Nachmach-Quote"],minus:["Completion-Rate niedrig"],obs:"deine Stick-Tutorials für Hochzeitsgästebücher",prod:"Leinen-Gästebuch, stickbar",cw:"Business-E-Mail im Profil",src:["TikTok-Profil (Business)"],rs:2}],
- leads:[
-  {id:"enl1",n:"The Paper Parlour",city:"Bath",cat:"Papeterie",f:[82,76,78,74,76,80,78,86],gap:"Grußkarten für Trauer, aber kein Gedenk-Gästebuch",why:["Trauer- und Hochzeitspapeterie"],tags:["Trauer","Hochzeit","Gästebuch","Leinen"],pr:["Gedenk-Gästebuch Leinen"],anlass:"Celebration-of-Life-Sortiment",rs:1},
-  {id:"enl2",n:"Harbour Lane Gifts",city:"Brighton",cat:"Geschenkeshop",f:[78,70,80,60,70,74,80,82],gap:"Haustier-Geschenke ohne Gedenkprodukte",why:["großes Haustier-Sortiment"],tags:["Haustier","Box","naturalistisch"],pr:["Haustier-Gedenkbox"],anlass:"Gedenkbox als Ergänzung zum Haustier-Sortiment",rs:3},
-  {id:"enl3",n:"Craft & Co. Makers Hub",city:"Manchester",cat:"Makerspace & Kreativhandel",f:[68,74,58,92,70,70,66,84],gap:"Laser und Stickmaschinen, aber keine Rohlinge",why:["Kurse für Laser und Stickerei"],tags:["Lasergravur","Stickerei","Box","Gästebuch"],pr:["Gedenkbox","Leinen-Gästebuch"],anlass:"Kursmaterial für Laser-Workshops",rs:0}],
- exec:["Haustier-Gedenkboxen sind in allen vier Quellen bestätigt – England-spezifisch über Google-Subregionen.","Gedenkfeiern werden zu „Celebration of Life“: ein neues Ritual rund um das Gästebuch.","Bestickte Gästebücher werden stark geplant, aber kaum gekauft (UK-Proxy)."],
- moves:[{t:"Gedenkbox gemeinsam mit @paws.and.pages weiterentwickeln",d:"Bereits aktive Multiplikatorin; Tierarzt-Netzwerk als Vertriebsweg prüfen."},{t:"Gedenk-Gästebuch in gedämpftem Leinen bemustern",d:"Test mit @thelinenpress.studio und The Paper Parlour."},{t:"Fünf Geschenkeshops mit Haustier-Sortiment an der Südküste kontaktieren",d:"Anlass: Gedenken fehlt im Sortiment."}],
- dont:[{t:"Nicht in Vinyl-Milestone-Boards einsteigen",d:"Gesättigt, Rohlingpassung gering."},{t:"Y2K-Scrapbooks ignorieren",d:"Nur TikTok, keine Kaufintention."}],
- aes:{then:["#FFFFFF","#EEE6DA","#D4C4A8","#A7B4B8","#F2D7D9","#CFCFCF"],now:["#E9E3D6","#B9AE98","#6D7462","#3E4A4F","#C8B38A","#F4F1EA"],cluster:"Gedämpftes Salbei + Steingrau + Blindprägung + feine Linienillustration.",rows:[["Material","Karton, Glanz","Leinen, Holz"],["Typografie","verspielte Script","klassische Serife"],["Motive","Herzen, Sterne","Pfoten, Familienbaum, Linienbotanik"],["Formensprache","dekorativ","ruhig, würdevoll"]]},
- moments:[{n:"Haustier",d:26,k:"steigt"},{n:"Trauer",d:19,k:"verändert sich",note:"von Trauer zu Würdigung"},{n:"Großeltern",d:14,k:"steigt"},{n:"Hochzeit",d:3,k:"steigt"},{n:"Geburt",d:-5,k:"fällt"}],
- tech:[["Lasergravur",26],["Stickerei",18],["Prägung",12],["Heißfolie",4],["Vinyl",-6],["Sublimation",-8]],
- adj:[{n:"Trauer & Gedenken",d:"Wachsender Moment ohne Produkt im Sortiment – mit besonderer Sorgfalt in der Ansprache."},{n:"Haustier-Gedenken",d:"Auch in Deutschland sichtbar; länderübergreifender Innovationsauftrag."}]},
-
-NO:{name:"Norwegen",radar:"Norway Memory Market Radar",
- trends:[
-  {id:"no1",n:"Minnebok zur Taufe in Wollfilz und Naturtönen",q:"minnebok dåp",m:"Taufe",p:"Bewahrung",st:"naturalistisch",mo:"Landschaft",ma:"Filz",te:"Stickerei",pr:"Erinnerungsbuch",s:[14,28,16,18],f:[58,56,62,2.2,62,58],r:[90,80,84,64,78,60],stg:2,prev:1,prob:.66,win:26,gap:"Erinnerungsbuch mit Filzeinband",why:"Weiche, taktile Materialien ersetzen glatte Oberflächen."},
-  {id:"no2",n:"Bunad-Ornamentik als Prägung zur Konfirmation",q:"konfirmasjon minnebok bunad",m:"Konfirmation",p:"Zugehörigkeit",st:"folk",mo:"Ornament",ma:"Leinen",te:"Prägung",pr:"Album",s:[18,34,24,22],f:[66,64,70,2.9,56,62],r:[88,84,86,82,82,64],stg:1,prev:0,prob:.63,win:28,gap:null,why:"Regionale Trachtenmuster werden zur Gestaltungssprache – ein stark norwegisches Signal."},
-  {id:"no3",n:"Personalisierte Hüttenbücher",q:"hyttebok personlig",m:"Familie",p:"Zugehörigkeit",st:"rustikal",mo:"Landschaft",ma:"Holz",te:"Lasergravur",pr:"Gästebuch",s:[20,26,12,28],f:[62,54,66,3.4,64,66],r:[70,82,82,74,80,66],stg:1,prev:1,prob:.6,win:30,gap:"Gästebuch mit Holzdeckel als Hüttenbuch",why:"Ein Ritual, das in keinem anderen Land existiert: Das Hüttenbuch als Familienchronik.",ex:true},
-  {id:"no4",n:"Russ-Erinnerungsalben",q:"russ minnebok",m:"Abschluss",p:"Selbstausdruck",st:"grafisch",mo:"Sterne",ma:"Kraftkarton",te:"Vinyl",pr:"Album",s:[5,10,34,8],f:[52,48,44,2.0,40,50],r:[64,72,58,56,66,50],stg:0,prev:0,prob:.45,win:8,gap:null,why:"Kulturell sichtbar, kommerziell noch offen."},
-  {id:"no5",n:"Minimale Leinen-Hochzeitsgästebücher",q:"gjestebok bryllup lin",m:"Hochzeit",p:"Ritual",st:"minimalistisch",mo:"Monogramm",ma:"Leinen",te:"Prägung",pr:"Gästebuch",s:[2,4,1,5],f:[24,20,16,0.9,82,58],r:[82,70,72,88,70,60],stg:3,prev:3,prob:.78,win:0,gap:null,why:"Stabil etabliert."},
-  {id:"no6",n:"Epoxid-Servierbretter",q:"epoxy fjøl",m:"Freundschaft",p:"Selbstausdruck",st:"verspielt",mo:"Ornament",ma:"Holz",te:"Mixed Media",pr:"Rahmen",s:[1,9,42,-5],f:[62,56,50,1.0,30,18],r:[30,34,28,15,22,20],stg:0,prev:0,prob:.38,win:4,gap:null,why:"Kein Erinnerungsbezug."}],
- creators:[
-  {id:"noc1",h:"@filt.og.minner",pl:"Instagram",rg:"Bergen",foc:"Filz- und Stickarbeiten für Tauf-Erinnerungsbücher",tags:["Taufe","naturalistisch","Landschaft","Filz","Stickerei","Erinnerungsbuch"],b:[78,74,76,78,70,80,64],fol:2700,cc:[13,12],mmf:[86,88,62,82,74,72,58],plus:["arbeitet taktil und textil – passt exakt zum Stilwechsel","regelmäßige Frage-Antwort-Formate"],minus:["Rohlingkompatibilität mittel: bislang nur Textil"],obs:"deine Filz- und Stickarbeiten für Tauf-Erinnerungsbücher",prod:"Erinnerungsbuch mit Filzeinband",cw:"geschäftliche E-Mail im Profil",src:["Instagram-Profil (öffentlich, geschäftlich)"],rs:1},
-  {id:"noc2",h:"@bunadmonster.papir",pl:"Pinterest + Instagram",rg:"Trondheim",foc:"Bunad-Muster als Papier- und Prägemotive",tags:["Konfirmation","folk","Ornament","Leinen","Prägung","Album"],b:[82,86,74,84,76,78,82],fol:1900,cc:[10,9],mmf:[82,90,80,86,80,84,46],plus:["verbindet Trachtenvereine mit Design-Community","andere adaptieren ihre Muster mit Quellenangabe"],minus:["kaum kommerzielle Erfahrung"],obs:"deine Bunad-Muster als Prägemotive",prod:"Konfirmationsalbum Leinen mit Prägefläche",cw:"Kontaktformular auf der Website",src:["Pinterest-Profil (öffentlich)","Instagram (geschäftlich)","Website"],rs:0},
-  {id:"noc3",h:"@hyttebokverksted",pl:"Instagram",rg:"Lillehammer",foc:"Gravierte Hüttenbücher und Gästebücher aus Holz",tags:["Familie","rustikal","Landschaft","Holz","Lasergravur","Gästebuch"],b:[68,70,72,66,64,70,60],fol:4400,cc:[14,13],mmf:[84,76,78,72,60,74,82],plus:["verkauft über Hüttenvermietungen","gute Completion-Rate"],minus:["wenig Initiationsverhalten"],obs:"deine gravierten Hüttenbücher",prod:"Gästebuch mit Holzdeckel",cw:"geschäftliche E-Mail auf der Website",src:["Instagram-Profil (geschäftlich)","Website"],rs:0}],
- leads:[
-  {id:"nol1",n:"Papirbutikken Grünerløkka",city:"Oslo",cat:"Papeterie",f:[84,78,84,70,80,82,78,86],gap:"Konfirmationskarten, aber keine Alben mit regionalem Bezug",why:["starkes Konfirmationssegment"],tags:["Konfirmation","folk","Album","Leinen"],pr:["Konfirmationsalbum mit Prägung"],anlass:"Konfirmationssaison 2027",rs:0},
-  {id:"nol2",n:"Hobbyhuset Tromsø",city:"Tromsø",cat:"Bastel- & Kreativhandel",f:[70,74,62,88,72,58,70,80],gap:"Filz und Stickgarn ohne Trägerprodukt",why:["Textilkurse"],tags:["Filz","Stickerei","Taufe","Erinnerungsbuch"],pr:["Erinnerungsbuch mit Filzeinband"],anlass:"Filz-Workshop „Minnebok“",rs:0},
-  {id:"nol3",n:"Fjellhytte Utleie",city:"Geilo",cat:"Hüttenvermietung",f:[62,40,60,50,78,68,82,78],gap:"Hütten ohne personalisierte Hüttenbücher",why:["über 120 Hütten im Portfolio"],tags:["Familie","Gästebuch","Holz","rustikal"],pr:["Hüttenbuch mit Holzdeckel"],anlass:"Hüttenbuch als Gästeerlebnis",rs:0}],
- exec:["Taktile Materialien (Wollfilz, Leinen) verdrängen glatte Oberflächen bei der Taufe.","Bunad-Ornamentik als Prägung erreicht einen sehr hohen Cultural Lift (CLI 2,9).","Das Hüttenbuch ist ein eigenständiges norwegisches Ritual mit Kaufintention."],
- moves:[{t:"Hüttenbuch mit Holzdeckel mit @hyttebokverksted testen",d:"Vertrieb über Hüttenvermietungen als B2B-Pilot."},{t:"Prägeplatten mit Bunad-Ornamenten co-kreieren",d:"@bunadmonster.papir als Mitgestalterin, nicht als Werbeträgerin."},{t:"Filzeinband als Materialvariante bemustern",d:"Test mit @filt.og.minner."}],
- dont:[{t:"Epoxid-Bretter ignorieren",d:"Kein Erinnerungsbezug."}],
- aes:{then:["#FFFFFF","#E7ECEF","#B9C4CC","#D5D5D5","#9AA6AE","#F3F3F3"],now:["#E8E1D2","#B5A58A","#7E6A55","#40505A","#A6352C","#E3D8C3"],cluster:"Wollfilz + Naturtöne + Bunad-Rot als Akzent + Blindprägung.",rows:[["Material","glatter Karton","Wollfilz, Leinen, Holz"],["Typografie","Script","Serife mit folkloristischer Initiale"],["Motive","Sterne, Kreuz","Fjell, Bunad-Ornament"],["Formensprache","glatt, hell","taktil, warm"]]},
- moments:[{n:"Familie",d:24,k:"neu",note:"Hüttenbuch als Familienchronik"},{n:"Konfirmation",d:19,k:"verändert sich",note:"Bunad-Ornamentik"},{n:"Taufe",d:12,k:"verändert sich",note:"Filz statt Glanz"},{n:"Abschluss",d:6,k:"steigt"},{n:"Hochzeit",d:1,k:"stabil"}],
- tech:[["Stickerei",24],["Prägung",20],["Lasergravur",14],["Vinyl",2],["Heißfolie",-7],["Sublimation",-9]],
- adj:[{n:"Hüttenbuch",d:"Neues Ritual rund um ein bestehendes Produkt (Gästebuch)."}]}
-};
-const ORDER=["DE","SE","IT","FR","PL","EN","NO"];
-const HEAT={dims:["Naturleinen","Goldprägung","Botanik","Folk-Ornamentik","Lasergravur","Stickerei","Großeltern","Haustier-Gedenken","Religiöse Symbolik","Trauer & Gedenken"],
- v:{DE:[1.2,0.8,1.1,0.6,1.4,1.0,1.6,1.3,0.7,1.1],SE:[0.7,0.6,1.0,0.9,0.9,1.9,1.3,1.0,0.5,1.0],IT:[1.8,1.3,1.2,0.7,1.2,1.3,0.9,0.7,1.5,0.8],FR:[1.3,1.1,1.7,0.6,0.9,1.1,1.0,0.9,0.9,0.8],PL:[1.1,2.3,0.9,3.1,1.6,0.9,0.8,0.6,2.2,0.9],EN:[1.0,0.9,1.0,0.5,1.5,1.3,1.2,1.8,0.6,1.6],NO:[1.1,0.8,0.9,2.9,1.0,2.2,1.1,0.8,0.7,0.9]}};
-
-/* =========================================================
-   STATE
-   ========================================================= */
-const KEY="mmr-state-v1";
-let S={country:"DE",view:"overview",cs:{},ls:{},hooks:{},w:null,cf:"alle",sort:"tms"};
-try{const raw=localStorage.getItem(KEY);if(raw)Object.assign(S,JSON.parse(raw));}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-const W=()=>S.w||DEFAULT_W;
-
-/* =========================================================
-   ALGORITHMEN
-   ========================================================= */
-const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
-const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)));};
-const wsum=(vals,ws)=>vals.reduce((s,v,i)=>s+v*ws[i][1],0)/ws.reduce((s,w)=>s+w[1],0);
-function countryNorm(vals){const m=mean(vals),s=sd(vals);return vals.map(v=>clamp(50+(s?((v-m)/s)*18:0)));}
-function crossSource(s){return s.filter(x=>x>5).length/4*100;}
-function sdiOf(s){const hasUp=s.some(x=>x>8),hasDown=s.some(x=>x<0);return Math.round(clamp(sd(s)*2.4+(hasUp&&hasDown?16:0)));}
-function interpret(s){
-  const [g,p,t,e]=s,up=x=>x>8,flat=x=>x<=8;
-  if(s.every(x=>x<0))return"Rückläufig über alle Quellen.";
-  if(s.every(up))return"Breit bestätigt: Nachfrage, Planung, Kultur und Kaufintention bewegen sich gemeinsam.";
-  if(up(t)&&flat(p)&&flat(e)&&flat(g))return"Kulturelle Dynamik auf TikTok ohne Planungs- oder Kaufbestätigung.";
-  if((up(p)||up(t))&&e<=4)return"Hohe Inspirationsdynamik, bislang aber keine erkennbare kommerzielle Umsetzung.";
-  if((up(e)||up(g))&&flat(p)&&flat(t))return"Unspektakulärer visueller Trend, aber steigende konkrete Kaufintention.";
-  if(up(p)&&up(e)&&flat(t))return"Früh geplant und bereits kaufrelevant – visuell noch leise.";
-  if(s.every(x=>Math.abs(x)<=6))return"Stabil ohne nennenswerte Bewegung.";
-  return"Gemischtes Bild – die Quellen sind sich noch nicht einig.";
-}
-function tagsOfTrend(t){return[t.m,t.st,t.mo,t.ma,t.te,t.pr];}
-function overlap(tags,t){const tt=tagsOfTrend(t);const n=tt.filter(x=>tags.includes(x)).length;return {n,score:clamp(n/4*100),hit:tt.filter(x=>tags.includes(x))};}
-
-const CACHE={};
-function compute(code){
-  const d=DATA[code],w=W(),wt=Object.values(w).reduce((a,b)=>a+b,0)||1;
-  const T=d.trends;
-  const raw={vel:T.map(t=>t.f[0]),acc:T.map(t=>t.f[1]),nov:T.map(t=>t.f[2]),cli:T.map(t=>t.f[3]),per:T.map(t=>t.f[4]),com:T.map(t=>t.f[5]),cross:T.map(t=>crossSource(t.s))};
-  const norm={};for(const k in raw)norm[k]=countryNorm(raw[k]);
-  const trends=T.map((t,i)=>{
-    const nf={};for(const k in norm)nf[k]=norm[k][i];
-    const tms=Math.round(Object.keys(w).reduce((s,k)=>s+nf[k]*w[k],0)/wt);
-    const mrs=Math.round(wsum(t.r,MRS_W));
-    const sdi=sdiOf(t.s);
-    let prio="Beobachten",pk="";
-    if(t.stg>=4){prio=t.stg===5?"Rückläufig":"Gesättigt";pk="no";}
-    else if(mrs<50&&tms>=50){prio="Nicht investieren";pk="no";}
-    else if(mrs>=72&&tms>=50){prio="Jetzt handeln";pk="act";}
-    return {...t,nf,tms,mrs,sdi,cross:raw.cross[i],cli:t.f[3],prio,pk,interp:interpret(t.s)};
-  });
-  const creators=d.creators.map(c=>{
-    const base=wsum(c.b,SEI_W),folScore=clamp(Math.log10(Math.max(c.fol,10))/5*100);
-    const sei=Math.round(base*.95+folScore*.05);
-    const ratio=c.cc[1]/c.cc[0];const cci=Math.round(clamp(ratio*80+Math.min(c.cc[1],10)*2));
-    const mmf=Math.round(wsum([sei,...c.mmf],MMF_W));
-    const bridges=trends.filter(t=>t.stg<4).map(t=>{const o=overlap(c.tags,t);return{t,o,score:Math.round(.55*o.score+.45*sei)};}).sort((a,b)=>b.score-a.score);
-    return{...c,sei,cci,mmf,best:bridges[0],bridges,st:S.cs[c.id]??c.rs};
-  });
-  const leads=d.leads.map(l=>{
-    const cos=Math.round(wsum(l.f,COS_W));
-    const linked=trends.filter(t=>t.stg<4).map(t=>({t,o:overlap(l.tags,t)})).filter(x=>x.o.n>=2).sort((a,b)=>b.o.n-a.o.n||b.t.tms-a.t.tms);
-    return{...l,cos,linked,st:S.ls[l.id]??l.rs};
-  });
-  return{d,trends,creators,leads};
-}
-
-/* =========================================================
-   HELPERS
-   ========================================================= */
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const de=(n,d=1)=>Number(n).toLocaleString("de-DE",{maximumFractionDigits:d,minimumFractionDigits:0});
-const sign=n=>(n>0?"+":n<0?"−":"±")+de(Math.abs(n),0)+" %";
-function meter(v,cls=""){return`<div class="meter ${cls}"><div class="bar"><i style="width:${v}%"></i></div><b class="num">${v}</b></div>`;}
-function arrow(d){return d>=20?"↑↑":d>=6?"↑":d<=-6?"↓":"→";}
-function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2200);}
-function geoOf(code,t,sensorIdx){
-  if(code!=="EN")return null;
-  if(sensorIdx===0&&t.geo==="high")return{k:"high",l:"England (subregional)"};
-  return{k:"uk",l:"UK-Proxy"};
-}
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-function renderHeader(){
-  $("#countries").innerHTML=ORDER.map(c=>`<button class="cbtn" data-c="${c}" aria-pressed="${S.country===c}">${DATA[c].name}</button>`).join("");
-  const d=DATA[S.country];
-  $("#cname").textContent=d.name;
-  $("#csub").innerHTML=`${esc(d.radar)}. Berichtszeitraum 7.–20. September 2026, Datenstand 20.09.2026${d.uk?". Viele Quellen liefern nur United Kingdom – Geo Confidence wird je Signal ausgewiesen.":""}`;
-  const steps=[["Mo","System rechnet"],["Di","Country Analyst"],["Mi","Scout & Produkt"],["Do","Finalisieren"],["Fr","Länderreport"]];
-  $("#flow").innerHTML=steps.map((s,i)=>`<li class="${i<1?"done":i===1?"now":""}">${s[0]}<small>${s[1]}</small></li>`).join("");
-}
-const VIEWS=[["overview","Überblick"],["trends","Trends"],["aesthetics","Ästhetik & Momente"],["creators","Multiplikatorinnen"],["leads","Neukunden"],["europe","Ländervergleich"],["method","Methodik & KPIs"]];
-function renderNav(C){
-  const counts={trends:C.trends.length,creators:C.creators.length,leads:C.leads.length};
-  $("#views").innerHTML=VIEWS.map(([k,l])=>`<button class="vbtn" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${counts[k]?`<span class="ct num">${counts[k]}</span>`:""}</button>`).join("");
-}
-
-/* =========================================================
-   RADAR
-   ========================================================= */
-function radarSVG(trends){
-  const cx=230,cy=230;
-  const bands=[[172,198],[134,172],[94,134],[52,94],[14,52],[14,52]];
-  const ranked=[...trends].sort((a,b)=>b.tms-a.tms);ranked.forEach((t,i)=>t.rank=i+1);
-  let g=`<svg viewBox="-84 -14 628 488" role="img" aria-label="Trendradar: Trends nach emotionalem Zweck und Reifegrad">`;
-  // bands
-  [198,172,134,94,52].forEach((r,i)=>{g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${i%2?"var(--surface)":"var(--sunk)"}" stroke="var(--rule)"/>`;});
-  // sectors
-  PURPOSES.forEach((p,i)=>{
-    const a=(-90+i*60)*Math.PI/180;
-    g+=`<line x1="${cx}" y1="${cy}" x2="${cx+198*Math.cos(a)}" y2="${cy+198*Math.sin(a)}" stroke="var(--rule)"/>`;
-    const am=(-60+i*60)*Math.PI/180,lx=cx+214*Math.cos(am),ly=cy+214*Math.sin(am);
-    const anchor=Math.abs(Math.cos(am))<.2?"middle":Math.cos(am)>0?"start":"end";
-    g+=`<text class="seclab" x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle">${p}</text>`;
-    g+=`<text class="secq" x="${lx}" y="${ly+13}" text-anchor="${anchor}" dominant-baseline="middle">${PURPOSE_Q[p]}</text>`;
-  });
-  // ring labels along the top axis
-  [["Emerging Signal",185],["Corroborated",153],["Emerging Trend",114],["Established",73],["Sättigung",33]].forEach(([l,r])=>{g+=`<text class="ringlab" x="${cx+4}" y="${cy-r+3}">${l}</text>`;});
-  // sweep
-  g+=`<g class="sweep"><animateTransform attributeName="transform" type="rotate" from="0 230 230" to="360 230 230" dur="2.6s" begin="0.2s" repeatCount="1" fill="freeze"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.8;1" dur="2.8s" begin="0.2s" fill="freeze"/><path d="M${cx},${cy} L${cx},${cy-198} A198,198 0 0,1 ${cx+198*Math.sin(Math.PI/9)},${cy-198*Math.cos(Math.PI/9)} Z" fill="var(--foil)" opacity=".18"/></g>`;
-  // dots
-  PURPOSES.forEach((p,i)=>{
-    const inSec=trends.filter(t=>t.p===p);
-    inSec.forEach((t,k)=>{
-      const [inner,outer]=bands[t.stg];
-      const r=outer-(0.18+0.64*t.tms/100)*(outer-inner);
-      const a=(-90+i*60+(k+1)/(inSec.length+1)*60)*Math.PI/180;
-      const x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
-      const rad=6+t.mrs/100*9;
-      const fill=t.stg>=4?"var(--surface)":t.pk==="act"?"var(--foil)":t.pk==="no"?"var(--fall-soft)":"var(--ink)";
-      const txt=t.stg>=4||t.pk==="no"?"var(--ink2)":t.pk==="act"?"#fff":"var(--surface)";
-      const stroke=t.stg>=4?"var(--ink3)":t.pk==="no"?"var(--fall)":"none";
-      g+=`<g class="dot" tabindex="0" role="button" data-t="${t.id}" aria-label="${esc(t.n)}, ${STAGES[t.stg]}, TMS ${t.tms}, MRS ${t.mrs}">`;
-      if(t.sdi>=55)g+=`<circle cx="${x}" cy="${y}" r="${rad+4}" fill="none" stroke="var(--review)" stroke-width="1.5" stroke-dasharray="3 2"/>`;
-      g+=`<circle class="b" cx="${x}" cy="${y}" r="${rad}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/><text x="${x}" y="${y+3.5}" text-anchor="middle" fill="${txt}">${t.rank}</text><title>${esc(t.n)}</title></g>`;
-    });
-  });
-  return g+`</svg>`;
-}
-
-/* =========================================================
-   VIEWS
-   ========================================================= */
-function vOverview(C){
-  const {d,trends}=C;const ranked=[...trends].sort((a,b)=>b.tms-a.tms);
-  const autoDont=trends.filter(t=>t.pk==="no"&&t.stg<4&&!d.dont.some(x=>x.t.includes(t.n.split(" ")[0])));
-  return`
-  <div class="ov">
-    <section class="block">
-      <div class="bhead"><h2>Was hat sich in den letzten 14 Tagen verändert?</h2></div>
-      <ol class="exec">${d.exec.slice(0,5).map(e=>`<li>${esc(e)}</li>`).join("")}</ol>
-    </section>
-    <section class="block radar">
-      <div class="bhead"><h2>Radar ${esc(d.name)}</h2><p>Position: Reifegrad (außen früh, innen etabliert) und emotionaler Zweck. Größe: Memory Relevance. Innerhalb des Rings rückt ein Trend mit höherem Momentum nach innen.</p></div>
-      <div class="radarwrap">
-        ${radarSVG(trends)}
-        <div class="legend"><span><i class="sw" style="background:var(--foil)"></i>Jetzt handeln</span><span><i class="sw" style="background:var(--ink)"></i>Beobachten</span><span><i class="sw" style="background:var(--fall-soft);border:1px solid var(--fall)"></i>Nicht investieren</span><span><i class="sw" style="border:1.5px dashed var(--review)"></i>Quellen uneinig</span></div>
-        <ol class="rlist">${ranked.map(t=>`<li data-t="${t.id}"><span class="rk num">${t.rank}</span><span><span class="rn">${esc(t.n)}</span><br><span class="rm">${STAGES[t.stg]} · ${esc(t.m)}</span></span><span class="num">${t.pk?`<span class="chip ${t.pk}">${t.prio}</span>`:`<span class="chip">${t.prio}</span>`}</span></li>`).join("")}</ol>
-      </div>
-    </section>
+  <div class="version-footer">
+    Version <span id="appVersionLabel"></span>
+    <button id="whatsNewBtn" class="link-btn">Was ist neu</button>
   </div>
-  <section class="block">
-    <div class="bhead"><h2>Drei Schritte jetzt</h2><p>Das Radar soll Handlungen erzeugen. Jede Empfehlung wird am Donnerstag vom Team finalisiert.</p></div>
-    <div class="moves">${d.moves.map((m,i)=>`<div class="move"><div class="mk">Schritt ${i+1}</div><h3>${esc(m.t)}</h3><p>${esc(m.d)}</p></div>`).join("")}</div>
-  </section>
-  <section class="block">
-    <div class="bhead"><h2>Hier nicht</h2><p>Ein gutes Radar sagt auch, wo sich Investition nicht lohnt.</p></div>
-    <div class="dont">${d.dont.map(x=>`<div class="d"><b>${esc(x.t)}</b><p>${esc(x.d)}</p></div>`).join("")}
-    ${autoDont.map(t=>`<div class="d"><b>${esc(t.n)}</b><p>TMS ${t.tms}, aber Memory Relevance nur ${t.mrs}. ${esc(t.interp)}</p><div class="auto">automatisch markiert</div></div>`).join("")}</div>
-  </section>`;
-}
+</div>
 
-function vTrends(C){
-  const list=[...C.trends].sort((a,b)=>S.sort==="mrs"?b.mrs-a.mrs:S.sort==="sdi"?b.sdi-a.sdi:b.tms-a.tms);
-  const th=(k,l)=>`<th class="sortable" data-sort="${k}" aria-sort="${S.sort===k?"descending":"none"}">${l}${S.sort===k?" ↓":""}</th>`;
-  return`<section class="block">
-  <div class="bhead"><h2>Trend Map</h2><p>Momentum (TMS) ist innerhalb von ${esc(C.d.name)} normiert – 80 Punkte hier sind nicht dasselbe wie 80 Punkte in einem anderen Land. Zeile antippen für die Trend Card.</p></div>
-  <div class="tscroll"><table>
-   <thead><tr><th>Trend</th>${th("tms","Momentum")}<th>Beschl.</th><th>Confidence</th><th>Life Moment</th><th>Stil</th><th>Motiv</th><th>Material</th><th>Veredelung</th>${th("mrs","Produktfit (MRS)")}${th("sdi","SDI")}<th>Empfehlung</th></tr></thead>
-   <tbody>${list.map(t=>`<tr data-t="${t.id}">
-     <td class="tn"><b>${esc(t.n)}</b><small>„${esc(t.q)}“</small>${t.ex?` <span class="chip expl">Exploration</span>`:""}</td>
-     <td>${meter(t.tms)}</td>
-     <td class="num">${arrow(t.nf.acc-50)} ${Math.round(t.nf.acc)}</td>
-     <td class="stage">${STAGES[t.stg]}<small>${Math.round(t.prob*100)} % Wahrscheinlichkeit</small></td>
-     <td>${esc(t.m)}</td><td>${esc(t.st)}</td><td>${esc(t.mo)}</td><td>${esc(t.ma)}</td><td>${esc(t.te)}</td>
-     <td>${meter(t.mrs,"f")}</td>
-     <td>${t.sdi>=55?`<span class="chip rev">${t.sdi} · prüfen</span>`:`<span class="num muted">${t.sdi}</span>`}</td>
-     <td><span class="chip ${t.pk}">${t.prio}</span></td></tr>`).join("")}</tbody>
-  </table></div></section>`;
-}
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" data-view="cockpit"><span class="ico">🧭</span>Cockpit</button>
+  <button class="nav-btn" data-view="trends"><span class="ico">📈</span>Trends</button>
+  <button class="nav-btn" data-view="creators"><span class="ico">✋</span>Creator</button>
+  <button class="nav-btn" data-view="companies"><span class="ico">🏪</span>Händler</button>
+  <button class="nav-btn" data-view="crm"><span class="ico">🤝</span>CRM</button>
+</nav>
 
-function vAesthetics(C){
-  const d=C.d,a=d.aes;
-  return`<section class="block"><div class="bhead"><h2>Ästhetischer Wandel</h2><p>Vor sechs Monaten gegenüber heute – abgeleitet aus Clusterzentren der Bild-Embeddings. Hypothese, nicht Befund.</p></div>
-   <div class="aes"><div class="panel pad">
-    <div class="swrow"><div class="lab">Vor 6 Monaten</div><div class="strip">${a.then.map(c=>`<span style="background:${c}" title="${c}"></span>`).join("")}</div></div>
-    <div class="swrow"><div class="lab">Heute</div><div class="strip">${a.now.map(c=>`<span style="background:${c}" title="${c}"></span>`).join("")}</div></div>
-    <table class="shift"><tbody>${a.rows.map(r=>`<tr><td>${r[0]}</td><td class="then">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("")}</tbody></table>
-   </div>
-   <div><div class="cluster"><small>Neuer Stilcluster (Aesthetic Drift Detector)</small>${esc(a.cluster)}</div>
-   <p class="faint" style="font-size:.84rem;margin-top:12px">In der Produktivversion zeigt jeder Cluster die zugrunde liegenden Beispielbilder mit Quelle und Nutzungsstatus aus dem Raw Signal Store.</p></div></div></section>
-  <section class="block"><div class="bhead"><h2>Memory Moments</h2><p>Wofür brauchen Menschen in ${esc(d.name)} gerade Erinnerungsträger?</p></div>
-   <div class="panel pad"><ul class="mm">${d.moments.map(m=>{const w=Math.min(Math.abs(m.d)*2.4,100);const col=m.d<0?"var(--fall)":"var(--rise)";
-    return`<li><span>${esc(m.n)}${CORE_MOMENTS.includes(m.n)?"":` <span class="chip expl" title="außerhalb des heutigen Kernsortiments">angrenzend</span>`}</span><span><span class="chip ${m.k==="neu"?"act":m.k==="fällt"?"no":m.k==="verändert sich"?"rev":"up"}">${m.k}</span> <span style="display:inline-block;vertical-align:middle;height:5px;width:${w}px;background:${col};border-radius:3px;margin-left:6px"></span></span><span class="num" style="text-align:right">${sign(m.d)}</span>${m.note?`<span class="note">${esc(m.note)}</span>`:""}</li>`;}).join("")}</ul></div></section>
-  <section class="block"><div class="bhead"><h2>Personalisierungstechniken</h2><p>Grundlage für Entscheidungen über Oberflächen, Zubehör, Schulungen und Partnerschaften.</p></div>
-   <div class="tech">${d.tech.map(([n,v])=>`<div><span>${esc(n)}</span><span class="num"><span class="ar" style="color:${v<0?"var(--fall)":v>=6?"var(--rise)":"var(--ink3)"}">${arrow(v)}</span> ${sign(v)}</span></div>`).join("")}</div></section>
-  <section class="block"><div class="bhead"><h2>Innovationsaufträge</h2><p>Adjacency Discovery: angrenzende Erinnerungsmomente, die wir heute nicht bedienen (Kern: ${CORE_MOMENTS.join(", ")}).</p></div>
-   <div class="adj">${d.adj.map(x=>`<div class="a"><small>Innovationsauftrag</small><h3>${esc(x.n)}</h3><p>${esc(x.d)}</p></div>`).join("")}</div></section>`;
-}
+<!-- Was ist neu (übernommen aus der Familien-App, Stand jetzt serverseitig pro Konto) -->
+<div class="overlay hidden" id="whatsNewOverlay">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-head">
+      <h3>Was ist neu</h3>
+      <button class="icon-btn" aria-label="Schließen" onclick="document.getElementById('whatsNewOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div id="whatsNewContent" style="font-size:13px;line-height:1.7;color:var(--text-soft)"></div>
+  </div>
+</div>
 
-function hookText(c,d,motive){
-  const t=c.best.t,name=c.h.replace(/^@/,"");
-  const intro=`Hallo ${name}, wir sind auf ${c.obs} aufmerksam geworden.`;
-  const trend=` Wir sehen gerade, dass ähnliche Gestaltungsrichtungen rund um ${t.m} in ${d.name} stärker auftauchen.`;
-  const us=` Wir fertigen in Deutschland hochwertige, unveredelte Erinnerungsrohlinge.`;
-  const ask={
-    MAKER:` Wir würden gern sehen, was jemand mit deiner Handschrift aus unserem Rohling (${c.prod}) machen würde.`,
-    "CO-CREATION":` Wir entwickeln gerade einen Rohling weiter (${c.prod}) und würden gern von deiner Erfahrung mit ${t.te} lernen.`,
-    COMMUNITY:` Wir bauen in ${d.name} eine kleine Gemeinschaft von Erinnerungsgestalterinnen auf und würden dich gern dabei haben.`}[motive];
-  return intro+trend+us+ask+` Keine Postingpflicht, keine Designvorgabe – wir würden dir gern einen Rohling schicken und deine Interpretation kennenlernen.`;
-}
-const FORBIDDEN=[/\bjahre alt\b/i,/\bdein(em|en|er|e)? alter\b/i,/schwanger/i,/\bbald (zu )?heiraten\b/i,/\bverheiratet\b/i,/\bgeschieden\b/i,/\bsingle\b/i,/\bdein(em|en|er|e)? (mann|frau|freund|freundin|partner|partnerin|kind|kinder|baby|familie)\b/i,/\bwohnst\b/i,/\bkrankheit|diagnose|gesundheit/i,/\bprivat(en|es)? (account|profil|foto|bilder)\b/i,/\bgesicht/i,/\breligion|glaube\b/i];
-function guard(c,text,reviewed){
-  const hits=FORBIDDEN.filter(r=>r.test(text));
-  const work=c.tags.some(tag=>text.toLowerCase().includes(tag.toLowerCase()))||text.includes(c.obs);
-  const pub=c.src.every(s=>!/privat/i.test(s));
-  return{items:[
-    {ok:pub,l:"Nur öffentliche, professionelle Quellen"},
-    {ok:work,l:"Bezieht sich unmittelbar auf die kreative Arbeit"},
-    {ok:!hits.length,l:hits.length?"Enthält persönliche oder sensible Annahmen – bitte entfernen":"Keine persönlichen oder sensiblen Annahmen"},
-    {ok:reviewed,l:"Von einem Menschen geprüft"}],pass:pub&&work&&!hits.length&&reviewed};
-}
-function strongest(t){let i=0;t.s.forEach((v,k)=>{if(v>t.s[i])i=k;});return`${SENSORS[i].k} ${sign(t.s[i])} ggü. lokaler Baseline`;}
+<!-- Aufgaben / Wiedervorlagen -->
+<div class="overlay hidden" id="tasksOverlay">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-head">
+      <h3>Meine Aufgaben</h3>
+      <button class="icon-btn" aria-label="Schließen" onclick="document.getElementById('tasksOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div id="tasksContent"></div>
+  </div>
+</div>
 
-function personCard(c,d){
-  const H=S.hooks[c.id]||{};const motive=H.motive||"MAKER";const text=H.text??hookText(c,d,motive);const gd=guard(c,text,!!H.reviewed);
-  const bt=c.best.t;
-  return`<article class="person" data-c="${c.id}">
-   <div class="top">
-    <div><h3>${esc(c.h)}</h3><div class="meta">${esc(c.pl)}, ${esc(c.rg)} · ${de(c.fol,0)} Follower (max. 5 % Gewicht)</div><p class="foc">${esc(c.foc)}</p></div>
-    <div class="scores"><div class="score main"><b class="num">${c.mmf}</b><span>Memory Maker Fit</span></div><div class="score"><b class="num">${c.sei}</b><span>Social Energy</span></div><div class="score"><b class="num">${c.cci}</b><span>Completion</span></div></div>
-    <ul class="why">${c.plus.map(p=>`<li class="p">${esc(p)}</li>`).join("")}${c.minus.map(p=>`<li class="m">${esc(p)}</li>`).join("")}</ul>
-   </div>
-   <div class="bridge"><span class="faint">Trend-Creator-Bridge</span><span class="bt" data-t="${bt.id}">${esc(bt.n)}</span><span class="chip">${c.best.score}</span><span class="faint">Treffer: ${esc(c.best.o.hit.join(", ")||"–")}</span>
-    <label class="statussel"><span class="faint">Status</span><select data-cs="${c.id}">${C_STATUS.map((s,i)=>`<option value="${i}" ${c.st===i?"selected":""}>${s}</option>`).join("")}</select></label></div>
-   <details class="hook" ${H.open?"open":""} data-h="${c.id}"><summary>Connection Hook ${gd.pass?`<span class="chip up" style="margin-left:8px">freigegeben</span>`:""}</summary>
-    <div class="hookbody">
-     <dl class="hookgrid">
-      <dt>Beobachtung</dt><dd>${esc(c.obs.replace(/^deine?n? /,""))}</dd>
-      <dt>Lokaler Trend</dt><dd>${esc(bt.n)} – ${strongest(bt)}</dd>
-      <dt>Produktbrücke</dt><dd>${esc(c.prod)}</dd>
-      <dt>Kontaktweg</dt><dd>${esc(c.cw)}</dd>
-      <dt>Quellen</dt><dd>${c.src.map(esc).join("; ")}</dd>
-     </dl>
-     <div>
-      <div class="motives" role="group" aria-label="Einstiegsmotiv">${["MAKER","CO-CREATION","COMMUNITY"].map(m=>`<button class="fbtn" data-mot="${m}" data-for="${c.id}" aria-pressed="${motive===m}">${m[0]+m.slice(1).toLowerCase()}</button>`).join("")}</div>
-      <textarea data-ht="${c.id}" aria-label="Entwurf der Ansprache">${esc(text)}</textarea>
-      <ul class="guard" data-g="${c.id}">${gd.items.map(x=>`<li class="${x.ok?"ok":"bad"}">${x.l}</li>`).join("")}</ul>
-      <div class="row"><label class="chk"><input type="checkbox" data-rev="${c.id}" ${H.reviewed?"checked":""}> Ich habe den Text geprüft</label>
-       <button class="btn" data-rel="${c.id}" ${gd.pass?"":"disabled"}>Freigeben und als kontaktiert markieren</button>
-       <button class="btn ghost" data-reset="${c.id}">Entwurf zurücksetzen</button>
-       <button class="btn ghost" data-ai="${c.id}" hidden>Formulierung mit Claude glätten</button></div>
-      <p class="faint" style="font-size:.78rem;margin:8px 0 0">Entwurf auf Deutsch. Vor Versand in die Landessprache übertragen; der Versand erfolgt manuell über den Kontaktweg.</p>
-     </div></div></details>
-  </article>`;
-}
-function vCreators(C){
-  const filters=["alle","offen","in Kontakt","aktiv"];
-  const f=S.cf;const fx=c=>f==="alle"?true:f==="offen"?c.st<=1:f==="in Kontakt"?c.st>=3&&c.st<=4:f==="aktiv"?c.st>=5:true;
-  const list=C.creators.filter(fx).sort((a,b)=>b.mmf-a.mmf);
-  return`<section class="block"><div class="bhead"><h2>Top-Multiplikatorinnen</h2><p>Gesucht wird Verhalten – macht, zeigt, hilft, probiert, verbindet, ermutigt, initiiert – nicht Reichweite. Keine Geschlechts- oder Gesichtserkennung; qualifiziert wird menschlich.</p></div>
-  <div class="filters" role="group" aria-label="Filter">${filters.map(x=>`<button class="fbtn" data-cf="${x}" aria-pressed="${f===x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join("")}</div>
-  ${list.length?list.map(c=>personCard(c,C.d)).join(""):`<div class="panel pad muted">Keine Kandidatinnen in diesem Status. Wähle einen anderen Filter.</div>`}</section>`;
-}
-function vLeads(C){
-  const list=[...C.leads].sort((a,b)=>b.cos-a.cos);
-  return`<section class="block"><div class="bhead"><h2>Potenzielle Neukunden</h2><p>Nicht 600 Adressen, sondern Gründe: Jeder Lead zeigt Sortimentslücke, passenden Trend und Gesprächsanlass. Pipeline A läuft getrennt von den Multiplikatorinnen.</p></div>
-  ${list.map(l=>`<article class="person"><div class="top">
-    <div><h3>${esc(l.n)}</h3><div class="meta">${esc(l.cat)}, ${esc(l.city)}</div><p class="foc">„${esc(l.gap)}“</p></div>
-    <div class="scores"><div class="score main"><b class="num">${l.cos}</b><span>Opportunity Score</span></div><div class="score" style="grid-column:span 2"><span>Empfohlene Produkte</span><div style="font-size:.88rem;margin-top:4px">${l.pr.map(esc).join(", ")}</div></div></div>
-    <ul class="why">${l.why.map(w=>`<li class="p">${esc(w)}</li>`).join("")}${l.linked.length?`<li class="p">passt zu ${l.linked.length} wachsenden Trend${l.linked.length>1?"s":""} im Land</li>`:""}</ul></div>
-   <div class="bridge"><span class="faint">Gesprächsanlass</span><span>${esc(l.anlass)}</span>${l.linked[0]?`<span class="faint">Trend</span><span class="bt" data-t="${l.linked[0].t.id}">${esc(l.linked[0].t.n)}</span>`:""}
-    <label class="statussel"><span class="faint">Status</span><select data-ls="${l.id}">${L_STATUS.map((s,i)=>`<option value="${i}" ${l.st===i?"selected":""}>${s}</option>`).join("")}</select></label></div></article>`).join("")}</section>`;
-}
-function vEurope(){
-  const col=v=>v>=1.5?`background:color-mix(in srgb,var(--foil) ${Math.min(90,(v-1)*45)}%,transparent);color:${v>=2.2?"#fff":"var(--ink)"}`:v<=0.8?`background:var(--fall-soft);color:var(--fall)`:`background:var(--sunk);color:var(--ink2)`;
-  return`<section class="block"><div class="bhead"><h2>Cultural Lift Index im Vergleich</h2><p>Erst nach der unabhängigen Länderanalyse vergleicht die Metaebene. CLI = lokaler Bedeutungsanteil / europäischer Bedeutungsanteil. Über 1,5 bedeutet: Hier passiert etwas Landesspezifisches.</p></div>
-  <div class="tscroll"><table class="heat"><thead><tr><th>Dimension</th>${ORDER.map(c=>`<th>${DATA[c].name}</th>`).join("")}</tr></thead>
-  <tbody>${HEAT.dims.map((dm,i)=>`<tr><td>${dm}</td>${ORDER.map(c=>{const v=HEAT.v[c][i];return`<td><span class="hc num" style="${col(v)}">${de(v)}</span></td>`;}).join("")}</tr>`).join("")}</tbody></table></div>
-  <p class="faint" style="font-size:.84rem;margin-top:12px">Lesebeispiel: Naturleinen ist in Schweden Mainstream (CLI 0,7), in Italien aber gerade ungewöhnlich stark (1,8). Ein europäisches Durchschnittsmodell würde beides verwischen.</p></section>`;
-}
-function vMethod(){
-  const all=ORDER.flatMap(c=>compute(c).creators);
-  const reviewed=all.filter(c=>c.st!==0),relevant=all.filter(c=>[1,3,4,5,6].includes(c.st));
-  const contacted=all.filter(c=>c.st>=3),created=all.filter(c=>c.st>=5),mult=all.filter(c=>c.st===6);
-  const pct=(a,b)=>b.length?Math.round(a.length/b.length*100)+" %":"–";
-  const fun=[0,1,3,4,5,6].map(i=>all.filter(c=>i===0?true:i===1?[1,3,4,5,6].includes(c.st):c.st>=i).length);
-  const mx=Math.max(...fun);
-  const w=W(),wt=Object.values(w).reduce((a,b)=>a+b,0)||1;
-  const adjCount=ORDER.reduce((s,c)=>s+DATA[c].adj.length,0);
-  const velocity=ORDER.map(c=>[DATA[c].name,compute(c).creators.filter(x=>x.st>=5).length]);
-  const formula=(title,ws)=>`<div class="panel pad"><h3 style="margin-bottom:8px">${title}</h3><div class="formula">${ws.map(([l,v])=>`<div><span>${l}</span><span class="num">${v} %</span></div>`).join("")}</div></div>`;
-  return`<section class="block"><div class="bhead"><h2>Wirkung</h2><p>Aus den Review-Status aller sieben Länder berechnet. Die Zielvariable ist Creator Activation, nicht Antwortquote oder Reichweite.</p></div>
-  <div class="kpis">
-   <div class="kpi ns"><h4>Memory Maker Activation Rate</h4><b class="num">${pct(created,contacted)}</b><p>Anteil kontaktierter, qualifizierter Personen, die innerhalb von 45 Tagen gestaltet und ihr Ergebnis gezeigt haben (${created.length} von ${contacted.length}).</p>
-    <div class="funnel">${fun.map((v,i)=>`<div class="${i>=4?"hi":""}" style="height:${Math.max(6,v/mx*100)}%" title="${v}"></div>`).join("")}</div>
-    <div class="flab"><span>Entdeckt ${fun[0]}</span><span>Relevant ${fun[1]}</span><span>Kontakt ${fun[2]}</span><span>Rohling ${fun[3]}</span><span>Kreation ${fun[4]}</span><span>Multipl. ${fun[5]}</span></div></div>
-   <div class="kpi"><h4>Creator Discovery Precision</h4><b class="num">${pct(relevant,reviewed)}</b><p>Nach Human Review als relevant bestätigt.</p></div>
-   <div class="kpi"><h4>Creation-to-Multiplication</h4><b class="num">${pct(mult,created)}</b><p>Gestalterinnen, die einer weiteren Person den Einstieg ermöglicht haben.</p></div>
-   <div class="kpi"><h4>Radar-to-Product</h4><b class="num">${adjCount}</b><p>offene Innovationsaufträge über alle Länder.</p></div>
-   <div class="kpi"><h4>Trend Lead Time</h4><b>–</b><p>Messbar ab dem dritten Berichtszyklus, wenn frühere Einschätzungen überprüft sind.</p></div>
-   <div class="kpi"><h4>Country Entry Velocity</h4><p style="margin-top:0">Aktive Maker je Land</p><div class="formula">${velocity.map(([n,v])=>`<div><span>${n}</span><span class="num">${v}</span></div>`).join("")}</div></div>
-  </div></section>
-  <section class="block"><div class="bhead"><h2>Gewichtung des Trend Momentum Score</h2><p>Probeweise verschieben – Momentum und Reihenfolge in allen Ländern werden sofort neu berechnet. Werte werden auf 100 % normiert.</p></div>
-   <div class="panel pad weights">${Object.keys(DEFAULT_W).map(k=>`<div class="wr"><label for="w_${k}">${W_LABEL[k]}</label><input id="w_${k}" type="range" min="0" max="40" value="${w[k]}" data-w="${k}"><span class="num" id="wv_${k}">${Math.round(w[k]/wt*100)} %</span></div>`).join("")}
-   <div class="row" style="margin-top:10px"><button class="btn ghost" id="wreset">Standardgewichte wiederherstellen</button></div></div></section>
-  <section class="block"><div class="bhead"><h2>Scores</h2><p>Jeder Score ist nachvollziehbar zusammengesetzt. Das LLM entscheidet nicht, was ein Trend ist – die statistischen Signale entscheiden, das LLM erklärt.</p></div>
-   <div class="mgrid">${formula("Memory Relevance Score",MRS_W)}${formula("Social Energy Index",SEI_W)}${formula("Memory Maker Fit",MMF_W)}${formula("Customer Opportunity Score",COS_W)}
-   <div class="panel pad"><h3 style="margin-bottom:8px">Weitere Algorithmen</h3><div class="formula">
-    <div><span>Cultural Lift Index</span><span>lokal / europäisch</span></div><div><span>Signal Disagreement Index</span><span>Streuung der Sensoren</span></div><div><span>Bayesian Trend Confidence</span><span>6 Klassen, alle 14 Tage</span></div><div><span>Trend-Creator-Bridge</span><span>55 % Nähe, 45 % SEI</span></div><div><span>Creator Completion Index</span><span>fertig / begonnen</span></div><div><span>Exploration Budget</span><span>20 % außerhalb</span></div></div></div></div></section>
-  <section class="block"><div class="bhead"><h2>Datenschutz als Architektur</h2></div>
-   <div class="panel pad"><ul class="principles"><li>Keine heimlichen Persönlichkeitsprofile.</li><li>Keine Gesichtserkennung.</li><li>Keine Ableitung sensibler Eigenschaften.</li><li>Keine Geschlechtererkennung aus Bildern.</li><li>Keine privaten Accounts.</li><li>Keine Datenbroker-Blackboxes.</li><li>Keine automatisierten Kontaktentscheidungen.</li><li>Discovery Layer speichert nur Handle, URL, Land, Kategorien, Signale, Quellen, Datum.</li><li>Überführung in die Kontaktpflege erst nach menschlicher Bestätigung.</li><li>Widerspruchsrecht bei Direktmarketing (DSGVO, UK-GDPR/PECR).</li></ul></div></section>
-  <section class="block"><div class="bhead"><h2>Architektur</h2></div>
-   <div class="panel pad"><ol class="layers"><li><div><b>Ingestion</b>API-Connectoren, lizenzierte Quellen, Web, RSS, eigene Shopdaten, Creator- und Händlerfeedback.</div></li><li><div><b>Raw Signal Store</b>Quelle, Zeitpunkt, Land, Region, Sprache, URL, Signaltyp, Lizenzstatus – auditierbar.</div></li><li><div><b>Intelligence</b>Embeddings, Clustering, Change-Point-Detection, Zeitreihen, Graphanalyse, Scoring.</div></li><li><div><b>Knowledge Graph</b>Trend → Motiv → Land → Creator → Technik → Life Moment → Produkt → Rohling.</div></li><li><div><b>Human Intelligence</b>„Algorithmisch interessant, kulturell Unsinn“ – menschliche Entscheidungen werden gespeichert und trainieren das Modell.</div></li></ol></div></section>`;
-}
+<!-- Verwaltung: Rollen, Quellen, Protokoll -->
+<div class="overlay hidden" id="adminOverlay">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-head">
+      <h3>Verwaltung</h3>
+      <button class="icon-btn" aria-label="Schließen" onclick="document.getElementById('adminOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div id="adminContent"></div>
+  </div>
+</div>
 
-/* =========================================================
-   TREND CARD (Drawer)
-   ========================================================= */
-function openTrend(id){
-  const C=compute(S.country);const t=C.trends.find(x=>x.id===id);if(!t)return;
-  const code=S.country;
-  const people=C.creators.map(c=>({c,b:c.bridges.find(b=>b.t.id===id)})).filter(x=>x.b&&x.b.o.n>=2).sort((a,b)=>b.b.score-a.b.score);
-  const w=W(),wt=Object.values(w).reduce((a,b)=>a+b,0)||1;
-  const change=t.stg===t.prev?"Einschätzung aus dem letzten Zyklus bestätigt":t.stg>t.prev?`hochgestuft von ${STAGES[t.prev]}`:`herabgestuft von ${STAGES[t.prev]}`;
-  const sensorRows=t.s.map((v,i)=>{const g=geoOf(code,t,i);const wd=Math.min(Math.abs(v),60)/60*50;
-    return`<div class="sensor"><div class="lab">${SENSORS[i].k}<small>${SENSORS[i].r}${g?`<span class="geo ${g.k}">${g.l}</span>`:""}</small></div><div class="div"><i style="${v>=0?`left:50%;width:${wd}%`:`right:50%;width:${wd}%`};background:${v>=0?"var(--rise)":"var(--fall)"}"></i></div><div class="num" style="text-align:right">${sign(v)}</div></div>`;}).join("");
-  const facts=Object.keys(DEFAULT_W).map(k=>`<div class="fac"><span>${W_LABEL[k]}</span><div class="bar"><i style="width:${t.nf[k]}%"></i></div><span class="num">${Math.round(t.nf[k])}</span><span class="w num">×${Math.round(w[k]/wt*100)} %</span></div>`).join("");
-  const mrsF=MRS_W.map(([l,wv],i)=>`<div class="fac"><span>${l}</span><div class="bar"><i style="width:${t.r[i]};background:var(--foil);width:${t.r[i]}%"></i></div><span class="num">${t.r[i]}</span><span class="w num">×${wv} %</span></div>`).join("");
-  const pal=(DATA[code].aes.now||[]).slice(0,6);
-  $("#drawer").innerHTML=`<div class="dhead"><div><div class="faint" style="font-size:.8rem">${esc(DATA[code].name)} · Trend Card</div><h2 id="dtitle">${esc(t.n)}</h2><div class="row" style="margin-top:8px"><span class="chip ${t.pk}">${t.prio}</span><span class="chip">${STAGES[t.stg]}</span>${t.ex?`<span class="chip expl">Exploration</span>`:""}</div></div><button class="close" id="dclose" aria-label="Schließen">✕</button></div>
-  <div class="dbody">
-   <div class="q"><h4>Was sehen wir?</h4><div class="ans">${esc(t.n)}: ${esc(t.m)}, ${esc(t.st)}, Motiv ${esc(t.mo)}, Material ${esc(t.ma)}, Veredelung ${esc(t.te)}. Lokaler Suchbegriff „${esc(t.q)}“.</div></div>
-   <div class="q"><h4>Warum ist es neu?</h4><div class="ans">${esc(t.why)}</div><p class="faint" style="margin:8px 0 0;font-size:.84rem">Cultural Lift ${de(t.cli)}${t.cli>=1.5?" – spezifisch für dieses Land":t.cli<=.8?" – hier eher Baseline":""}.</p></div>
-   <div class="q"><h4>Wo sehen wir es?</h4>${sensorRows}<div class="interp">${esc(t.interp)}</div>${t.sdi>=55?`<div class="sdi">Signal Disagreement Index ${t.sdi}: Die Sensoren laufen auseinander. Forschungsauftrag an den Country Analyst.</div>`:""}${code==="EN"&&t.geo!=="high"?`<div class="sdi">UK-Signal; England-spezifische Bestätigung steht aus.</div>`:""}</div>
-   <div class="q"><h4>Wie stark ist die Evidenz?</h4><div class="ans">${STAGES[t.stg]} (${STAGE_DE[t.stg]}) mit ${Math.round(t.prob*100)} % Wahrscheinlichkeit; ${change}. ${t.cross/25} von 4 Quellen zeigen Wachstum über 5 %.</div>
-    <div style="margin-top:12px"><div class="fac" style="font-weight:600"><span>Trend Momentum Score</span><span></span><span class="num">${t.tms}</span><span></span></div>${facts}</div>
-    <div style="margin-top:12px"><div class="fac" style="font-weight:600"><span>Memory Relevance Score</span><span></span><span class="num">${t.mrs}</span><span></span></div>${mrsF}</div></div>
-   <div class="q"><h4>Welche Menschen treiben es?</h4>${people.length?`<ul class="people">${people.map(x=>`<li><span>${esc(x.c.h)} <span class="faint">${esc(x.c.rg)}</span></span><span class="num">Bridge ${x.b.score}, MMF ${x.c.mmf}</span></li>`).join("")}</ul>`:`<p class="muted" style="margin:0">Noch keine passende Gestalterin im Discovery Layer. Creator Scout beauftragen.</p>`}</div>
-   <div class="q"><h4>Welcher Erinnerungsträger und welche Veredelung passen?</h4><div class="ans">${esc(t.pr)}, veredelt mit ${esc(t.te)}.</div></div>
-   <div class="q"><h4>Welche Rohlinge fehlen?</h4><div class="ans">${t.gap?esc(t.gap):"Mit dem bestehenden Sortiment abgedeckt."}</div></div>
-   <div class="q"><h4>Wie lange ist das Opportunity Window offen?</h4><div class="ans">${t.win?`etwa ${t.win} Wochen`:"geschlossen"}</div></div>
-   <div class="q"><h4>Beispielbilder und Quellen</h4><div class="imgph">${pal.map(c=>`<span style="background:${c}"></span>`).join("")}</div><p class="faint" style="font-size:.78rem;margin:6px 0 10px">Platzhalter mit der Farbwelt des Landesclusters; Beispielbilder werden in der Produktivversion aus dem Raw Signal Store verlinkt.</p>
-    <ul class="src">${SENSORS.map((s,i)=>{const g=geoOf(code,t,i);return`<li>${s.src}, ${code==="EN"?"":DATA[code].name+", "}Suchbegriff „${esc(t.q)}“${g?`<span class="geo ${g.k}">${g.l}</span>`:""}</li>`;}).join("")}</ul></div>
-  </div>`;
-  $("#drawer").classList.add("on");$("#drawer").setAttribute("aria-hidden","false");$("#scrim").classList.add("on");
-  document.body.style.overflow="hidden";$("#dclose").focus();
-  $("#dclose").onclick=closeDrawer;
-}
-function closeDrawer(){$("#drawer").classList.remove("on");$("#drawer").setAttribute("aria-hidden","true");$("#scrim").classList.remove("on");document.body.style.overflow="";}
+<!-- Einstellungen -->
+<div class="overlay hidden" id="settingsOverlay">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-head">
+      <h3>Einstellungen</h3>
+      <button class="icon-btn" aria-label="Schließen" onclick="document.getElementById('settingsOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div id="settingsContent"></div>
+  </div>
+</div>
 
-/* =========================================================
-   RENDER & EVENTS
-   ========================================================= */
-let sampleFn=null;
-function render(){
-  const C=compute(S.country);
-  renderHeader();renderNav(C);
-  const v={overview:vOverview,trends:vTrends,aesthetics:vAesthetics,creators:vCreators,leads:vLeads,europe:vEurope,method:vMethod}[S.view]||vOverview;
-  $("#main").innerHTML=v(C);
-  if(sampleFn)document.querySelectorAll("[data-ai]").forEach(b=>b.hidden=false);
-}
-function refreshGuard(id){
-  const C=compute(S.country);const c=C.creators.find(x=>x.id===id);if(!c)return;
-  const H=S.hooks[id]||{};const text=H.text??hookText(c,C.d,H.motive||"MAKER");const gd=guard(c,text,!!H.reviewed);
-  const ul=document.querySelector(`[data-g="${id}"]`);if(ul)ul.innerHTML=gd.items.map(x=>`<li class="${x.ok?"ok":"bad"}">${x.l}</li>`).join("");
-  const b=document.querySelector(`[data-rel="${id}"]`);if(b)b.disabled=!gd.pass;
-}
-document.addEventListener("click",e=>{
-  const el=e.target.closest("[data-c],[data-v],[data-t],[data-sort],[data-cf],[data-mot],[data-rel],[data-reset],[data-ai],#wreset,#scrim");
-  if(!el)return;
-  if(el.id==="scrim"){closeDrawer();return;}
-  if(el.classList.contains("cbtn")){S.country=el.dataset.c;save();render();window.scrollTo({top:0});return;}
-  if(el.dataset.v){S.view=el.dataset.v;save();render();return;}
-  if(el.dataset.sort){S.sort=el.dataset.sort;save();render();return;}
-  if(el.dataset.cf){S.cf=el.dataset.cf;save();render();return;}
-  if(el.dataset.mot){const id=el.dataset.for;S.hooks[id]={...(S.hooks[id]||{}),motive:el.dataset.mot,text:undefined,reviewed:false,open:true};save();render();return;}
-  if(el.dataset.reset){const id=el.dataset.reset;S.hooks[id]={open:true};save();render();return;}
-  if(el.dataset.rel){const id=el.dataset.rel;S.cs[id]=Math.max(3,compute(S.country).creators.find(x=>x.id===id).st);S.hooks[id]={...(S.hooks[id]||{}),open:false};save();render();toast("Freigegeben – Status: Kontaktiert");return;}
-  if(el.dataset.ai){aiPolish(el.dataset.ai,el);return;}
-  if(el.id==="wreset"){S.w=null;save();render();toast("Standardgewichte wiederhergestellt");return;}
-  if(el.dataset.t&&!el.closest("select")){openTrend(el.dataset.t);return;}
-});
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeDrawer();
-  if((e.key==="Enter"||e.key===" ")&&e.target.matches(".dot,[data-t]")){e.preventDefault();openTrend(e.target.dataset.t);}
-});
-document.addEventListener("change",e=>{
-  const t=e.target;
-  if(t.dataset.cs){S.cs[t.dataset.cs]=+t.value;save();toast("Status gespeichert: "+C_STATUS[+t.value]);if(S.cf!=="alle")render();}
-  if(t.dataset.ls){S.ls[t.dataset.ls]=+t.value;save();toast("Status gespeichert: "+L_STATUS[+t.value]);}
-  if(t.dataset.rev){const id=t.dataset.rev;S.hooks[id]={...(S.hooks[id]||{}),reviewed:t.checked,open:true};save();refreshGuard(id);}
-});
-document.addEventListener("input",e=>{
-  const t=e.target;
-  if(t.dataset.ht){const id=t.dataset.ht;S.hooks[id]={...(S.hooks[id]||{}),text:t.value,reviewed:false,open:true};const cb=document.querySelector(`[data-rev="${id}"]`);if(cb)cb.checked=false;save();refreshGuard(id);}
-  if(t.dataset.w){S.w={...W(),[t.dataset.w]:+t.value};save();const w=W(),wt=Object.values(w).reduce((a,b)=>a+b,0)||1;Object.keys(w).forEach(k=>{const s=document.getElementById("wv_"+k);if(s)s.textContent=Math.round(w[k]/wt*100)+" %";});}
-});
-document.addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.h){S.hooks[d.dataset.h]={...(S.hooks[d.dataset.h]||{}),open:d.open};save();}},true);
+<!-- Detail-Sheet (Trend, Creator, Kontakt) -->
+<div class="overlay hidden" id="detailOverlay">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-head">
+      <h3 id="detailTitle">Details</h3>
+      <button class="icon-btn" aria-label="Schließen" onclick="document.getElementById('detailOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
 
-async function aiPolish(id,btn){
-  if(!sampleFn)return;
-  const C=compute(S.country);const c=C.creators.find(x=>x.id===id);const H=S.hooks[id]||{};
-  const text=H.text??hookText(c,C.d,H.motive||"MAKER");
-  btn.disabled=true;const old=btn.textContent;btn.textContent="Claude formuliert …";
-  try{
-    const r=await sampleFn(`Überarbeite diese Erstansprache an eine kreative Gestalterin (${c.h}, ${c.foc}) sprachlich, auf Deutsch, maximal 110 Wörter, warm und respektvoll, ohne Werbesprache. Regeln: nur Bezug auf öffentlich sichtbare kreative Arbeit; keine Vermutungen über Alter, Familie, Beziehung, Religion, Gesundheit oder Privatleben; keine Postingpflicht erwähnen lassen; kein Druck. Gib nur den überarbeiteten Text zurück.\n\nText:\n${text}`);
-    const out=(r&&r.text||"").trim();
-    if(out){S.hooks[id]={...H,text:out,reviewed:false,open:true};save();render();toast("Neuer Entwurf – bitte prüfen");}
-  }catch(err){toast(err&&err.code==="not_granted"?"Claude-Zugriff wurde nicht erlaubt":"Überarbeitung nicht möglich – Entwurf unverändert");btn.disabled=false;btn.textContent=old;}
-}
-
-render();
-// Neuberechnung nach Gewichtsänderung beim Verlassen des Reglers
-document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.w)toast("Momentum in allen Ländern neu berechnet");});
-(async()=>{for(let i=0;i<40;i++){if(window.claude&&typeof window.claude.use==="function")break;await new Promise(r=>setTimeout(r,250));}try{if(window.claude&&window.claude.use){const s=await window.claude.use("sample");if(s){sampleFn=s;document.querySelectorAll("[data-ai]").forEach(b=>b.hidden=false);}}}catch(e){}})();
-</script>
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>
