@@ -15,7 +15,12 @@ export default {
     minCoverageForTrendClasses: 0.6,
   },
   weakSignal: { accelerationPct: 0.8, noveltyPct: 0.7, maxLevelPct: 0.5, minPersistence: 0.5 },
-  sdi: { humanReviewThreshold: 60, directionZ: { strongUp: 1.5, up: 0.5, flat: 0.5, down: -0.5 } },
+  sdi: {
+    humanReviewThreshold: 60,
+    directionZ: { strongUp: 1.5, up: 0.5, flat: 0.5, down: -0.5 },
+    // Richtung je Sensor aus dem Perzentilrang innerhalb der Quelle
+    directionPct: { strongUp: 0.8, up: 0.6, down: 0.3 },
+  },
   lifecycle: {
     states: ["noise", "emerging_signal", "corroborated_signal", "emerging_trend", "established", "saturating", "declining"],
     transition: {
@@ -38,6 +43,8 @@ export default {
       declining:           { level: [3, 2],   velocity: [1.2, 5], acceleration: [1.5, 4], crossSource: [2, 3], persistence: [1.2, 4] },
     },
     confidencePenalties: { seasonalityUnadjusted: 0.85, lowCoverage: 0.8, ukProxy: 0.9 },
+    filterSteps: 12,
+    noisePrior: 0.2,
   },
   mrs: {
     weights: { momentProximity: 0.30, personalizationPotential: 0.20, emotionalMeaning: 0.15, blankFit: 0.15, finishability: 0.10, commercialPotential: 0.10 },
@@ -58,6 +65,13 @@ export default {
   cci: { weights: { completion: 0.6, sequence: 0.25, process: 0.15 }, sequenceDays: 21, minProjects: 3 },
   mmf: {
     weights: { sei: 0.20, makerActivity: 0.15, momentProximity: 0.15, blankCompatibility: 0.15, finishingCompetence: 0.10, learningExperimenting: 0.10, localNetworking: 0.10, commercialExperience: 0.05 },
+  },
+  bridge: {
+    weights: { affinity: 0.45, sei: 0.25, priority: 0.20, readiness: 0.10 },
+    affinity_dimension_weights: { style: 0.25, motif: 0.20, technique: 0.20, moment: 0.20, product_type: 0.10, material: 0.05 },
+    min_affinity: 0.35,
+    min_sei: 50,
+    top_n_per_country: 20,
   },
   scorecard: { prioritizeFromRaw: 20, closeLookFromRaw: 24, doubleWeight: ["helps", "initiates"] },
   cos: {
