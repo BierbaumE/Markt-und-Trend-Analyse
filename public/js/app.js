@@ -388,6 +388,8 @@ async function openCreator(id) {
     </div>
     <ul class="explain">${(c.explanations || []).map((x) => `<li class="${x.startsWith("+") ? "plus" : x.startsWith("–") ? "minus" : "note"}">${esc(x)}</li>`).join("")}</ul>
 
+    <div id="bridgeBox"><div class="loading">Profil und Anknüpfungspunkte werden berechnet …</div></div>
+
     <h2>Belege (${c.evidence.length})</h2>
     ${c.evidence.slice(0, 8).map((e) => `<div class="row"><div><div class="row-title">${esc(evidenceLabel(e.type))}</div><div class="row-sub">${fmtDate(e.observed_at)} · ${esc(e.captured_by)}${e.excerpt ? ` · „${esc(e.excerpt)}“` : ""}</div></div>${e.url ? `<a class="link-btn" href="${esc(e.url)}" target="_blank" rel="noreferrer">öffnen</a>` : ""}</div>`).join("") || `<div class="empty">Keine Belege erfasst.</div>`}
 
@@ -424,6 +426,8 @@ async function openCreator(id) {
       <div class="btn-row"><button class="btn" id="crSave">Status setzen</button></div>
     ` : `<div class="hint">In diesem Status ist kein weiterer Schritt vorgesehen.</div>`}
   `);
+
+  loadBridges(id);
 
   const statusSel = el("crStatus");
   if (statusSel) {
@@ -487,6 +491,94 @@ async function openContact(id) {
     try { await api.post(`/api/v1/crm/contacts/${id}/events`, body); openContact(id); loadTasks(); }
     catch (e) { alert(e.message); }
   });
+}
+
+// ---------- Profil und Anknüpfungspunkte ----------
+const DIM_LABEL = {
+  motif: "Motive", style: "Stil", moment: "Lebensmomente", technique: "Veredelung",
+  product_type: "Produkttypen", material: "Material",
+};
+
+async function loadBridges(creatorId) {
+  const box = el("bridgeBox");
+  if (!box) return;
+  let data;
+  try {
+    data = await api.get(`/api/v1/creators/${creatorId}/bridges`);
+  } catch (e) {
+    box.innerHTML = `<div class="hint">Anknüpfungspunkte nicht verfügbar: ${esc(e.message)}</div>`;
+    return;
+  }
+  const dims = Object.entries(data.profile.dimensions || {});
+  box.innerHTML = `
+    <h2>Abgeleitetes Profil</h2>
+    ${dims.length ? dims.map(([key, items]) => `
+      <div style="margin-bottom:8px">
+        <div class="metric-label">${esc(DIM_LABEL[key] || key)}</div>
+        <div class="pill-row">${items.map((i) => `<span class="pill ${i.share >= 0.4 ? "accent" : ""}">${esc(i.label)} · ${Math.round(i.share * 100)} %</span>`).join("")}</div>
+      </div>`).join("") : `<div class="hint">Noch keine Projekte erfasst, daher kein Profil ableitbar.</div>`}
+    <div class="hint">${data.profile.finished} fertige von ${data.profile.projects} beobachteten Projekten${data.profile.lastActivityDays !== null ? ` · letzte Aktivität vor ${data.profile.lastActivityDays} Tagen` : ""}. Abgeleitet aus beobachteten Arbeiten, nicht aus Eigenschaften der Person.</div>
+
+    <h2>Anknüpfungspunkte</h2>
+    ${data.matches.length ? data.matches.map((m, i) => bridgeCard(m, i)).join("") : `<div class="empty">Keine Überschneidung mit den bewerteten Trends dieses Landes.</div>`}
+    <div class="hint">${esc(data.note)}</div>`;
+
+  box.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+    const text = decodeURIComponent(b.dataset.copy);
+    try {
+      await navigator.clipboard.writeText(text);
+      b.textContent = "kopiert ✓";
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      b.textContent = "kopiert ✓";
+    }
+  }));
+  box.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
+    const target = el(b.dataset.toggle);
+    target.classList.toggle("hidden");
+    b.textContent = target.classList.contains("hidden") ? "Nachrichtenentwurf zeigen" : "Entwurf ausblenden";
+  }));
+}
+
+function bridgeCard(m, i) {
+  const h = m.hook;
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">${esc(m.label)}</div>
+        <div class="card-sub">Passung ${Math.round(m.affinity * 100)} %${m.overlap.length ? " über " + esc(m.overlap.map((o) => o.label).join(", ")) : ""}</div>
+      </div>
+      <div class="score">${Math.round(m.tcb)}<small> Brücke</small></div>
+    </div>
+    <div class="pill-row">
+      ${m.qualifies ? `<span class="pill ok">für Ansprache qualifiziert</span>` : `<span class="pill warn">unter der Schwelle — erst prüfen</span>`}
+      ${h.productSku ? `<span class="pill accent">${esc(h.productSku)}</span>` : ""}
+      ${m.opportunityWindow ? `<span class="pill">Zeitfenster ${m.opportunityWindow.minWeeks}–${m.opportunityWindow.maxWeeks} Wo.</span>` : ""}
+      ${h.guard.passed ? "" : `<span class="pill danger">Prüfung: ${esc(h.guard.findings.join(", "))}</span>`}
+    </div>
+    <ul class="explain">
+      <li class="plus">Beobachtung: ${esc(h.observation)}</li>
+      ${h.trendStatement ? `<li class="plus">Lokaler Trend: ${esc(h.trendStatement)}</li>` : ""}
+      ${h.product ? `<li class="plus">Produktbrücke: ${esc(h.product)}${h.productReasons.length ? " — " + esc(h.productReasons.join("; ")) : ""}</li>` : ""}
+      ${h.techniqueNote ? `<li class="plus">${esc(h.techniqueNote)}</li>` : ""}
+      ${h.assortmentIdea ? `<li class="note">${esc(h.assortmentIdea)}</li>` : ""}
+      <li class="minus">${esc(h.conversationIdea)}</li>
+    </ul>
+    <div class="btn-row">
+      <button class="btn small ghost" data-toggle="draft${i}">Nachrichtenentwurf zeigen</button>
+      <button class="btn small" data-copy="${encodeURIComponent(h.draft)}">Entwurf kopieren</button>
+    </div>
+    <div id="draft${i}" class="hidden">
+      <textarea rows="14" readonly style="margin-top:8px">${esc(h.draft)}</textarea>
+      <div class="hint">Entwurf, keine fertige Nachricht. Vor dem Versand lesen, anpassen und selbst verschicken — das System versendet nichts.</div>
+    </div>
+  </div>`;
 }
 
 // ---------- Aufgaben ----------
@@ -560,7 +652,10 @@ async function renderAdmin() {
     const btn = el("seedBtn"); btn.disabled = true; btn.textContent = "Erzeuge …";
     try {
       const r = await api.post("/api/v1/admin/seed", { countries: ["DE", "SE"] });
-      el("adminResult").textContent = `${r.scenarios} Szenarien über ${r.weeks} Wochen erzeugt. Jetzt Bewertung rechnen.`;
+      const cleaned = r.removed && (r.removed.trends || r.removed.companies)
+        ? ` Aufgeräumt: ${r.removed.trends} doppelte Trends, ${r.removed.companies} doppelte Händler entfernt.`
+        : "";
+      el("adminResult").textContent = `${r.scenarios} Szenarien über ${r.weeks} Wochen erzeugt.${cleaned} Jetzt Bewertung rechnen.`;
     } catch (e) { el("adminResult").textContent = e.message; }
     btn.disabled = false; btn.textContent = "Demodaten erzeugen";
   });
