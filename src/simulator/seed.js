@@ -47,7 +47,7 @@ const SCENARIOS = [
     expect: "Inspiration ohne Kommerz" },
   { label: "Schleifen-Monogramm zur Taufe", local: "Schleife Monogramm Taufe", country: "DE",
     concepts: ["motif.bow", "moment.baptism", "technique.hot_foil"],
-    shape: { google_trends: "rise", pinterest_trends: "rise", etsy: "rise_strong", tiktok_creative_center: "flat" },
+    shape: { google_trends: "rise", pinterest_trends: "flat", etsy: "rise_strong", tiktok_creative_center: "flat" },
     expect: "stille Kaufintention" },
   { label: "Kinderzeichnung als Gravur", local: "Kinderzeichnung Gravur", country: "DE",
     concepts: ["motif.child_drawing", "technique.laser_engraving", "product.box"],
@@ -106,6 +106,8 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
   const rng = mulberry32(42);
   const now = nowIso();
   const stmts = [];
+
+  const removed = await cleanupDuplicates(db);
 
   for (const code of Object.keys(COUNTRIES)) {
     const c = COUNTRIES[code];
@@ -199,7 +201,7 @@ export async function seedDemo(env, { weeks = 78, countries = ["DE", "SE"] } = {
 
   await seedCreators(db, countries, now);
   await seedCompanies(db, countries, now);
-  return { scenarios: SCENARIOS.filter((s) => countries.includes(s.country)).length, weeks };
+  return { scenarios: SCENARIOS.filter((s) => countries.includes(s.country)).length, weeks, removed };
 }
 
 async function seedCreators(db, countries, now) {
@@ -298,4 +300,64 @@ async function seedCompanies(db, countries, now) {
 
 async function flush(db, stmts) {
   for (let i = 0; i < stmts.length; i += 20) await db.batch(stmts.slice(i, i + 20));
+}
+
+// Räumt Dubletten auf, die frühere Simulatorläufe angelegt haben: je Land und Bezeichnung
+// bleibt die älteste Zeile bestehen, die übrigen werden samt Bewertungen entfernt.
+// Außerdem verschwinden Bewertungen, deren Trend es nicht mehr gibt.
+async function cleanupDuplicates(db) {
+  const removed = { trends: 0, companies: 0, snapshots: 0 };
+
+  const dupTrends = await db.all(
+    `SELECT country_code, label_de, COUNT(*) AS n, MIN(id) AS keep_id
+     FROM trend GROUP BY country_code, label_de HAVING COUNT(*) > 1`
+  );
+  for (const d of dupTrends) {
+    const rows = await db.all(
+      "SELECT id FROM trend WHERE country_code = ? AND label_de = ? AND id <> ?",
+      d.country_code, d.label_de, d.keep_id
+    );
+    for (let i = 0; i < rows.length; i += 20) {
+      await db.batch(rows.slice(i, i + 20).map((r) => [
+        "DELETE FROM trend_snapshot WHERE trend_id = ?", [r.id],
+      ]));
+      await db.batch(rows.slice(i, i + 20).map((r) => [
+        "DELETE FROM trend_concept WHERE trend_id = ?", [r.id],
+      ]));
+      await db.batch(rows.slice(i, i + 20).map((r) => ["DELETE FROM trend WHERE id = ?", [r.id]]));
+    }
+    removed.trends += rows.length;
+  }
+
+  const dupCompanies = await db.all(
+    `SELECT country_code, name, COUNT(*) AS n, MIN(id) AS keep_id
+     FROM company_candidate GROUP BY country_code, name HAVING COUNT(*) > 1`
+  );
+  for (const d of dupCompanies) {
+    const rows = await db.all(
+      "SELECT id FROM company_candidate WHERE country_code = ? AND name = ? AND id <> ?",
+      d.country_code, d.name, d.keep_id
+    );
+    for (let i = 0; i < rows.length; i += 20) {
+      await db.batch(rows.slice(i, i + 20).map((r) => [
+        "DELETE FROM company_score_snapshot WHERE company_candidate_id = ?", [r.id],
+      ]));
+      await db.batch(rows.slice(i, i + 20).map((r) => ["DELETE FROM company_candidate WHERE id = ?", [r.id]]));
+    }
+    removed.companies += rows.length;
+  }
+
+  const orphans = await db.run(
+    "DELETE FROM trend_snapshot WHERE trend_id NOT IN (SELECT id FROM trend)"
+  );
+  removed.snapshots = (orphans && orphans.meta && orphans.meta.changes) || 0;
+
+  // Mehrere Bewertungen desselben Trends im selben Zyklus: nur die neueste behalten.
+  await db.run(
+    `DELETE FROM trend_snapshot WHERE id NOT IN (
+       SELECT id FROM trend_snapshot ts WHERE ts.created_at = (
+         SELECT MAX(created_at) FROM trend_snapshot x WHERE x.trend_id = ts.trend_id AND x.cycle_id = ts.cycle_id
+       ))`
+  );
+  return removed;
 }
