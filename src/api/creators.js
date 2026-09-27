@@ -144,3 +144,147 @@ export function registerCreatorRoutes(router) {
     );
     await ctx.audit({ action: "creator.scorecard", subjectType: "creator", subjectId: ctx.params.id, detail: totals });
     return json({ ok: true, ...totals });
+  });
+
+  // Scout-Capture: Evidenz erfassen. Pflicht: öffentlich und auf kreative Arbeit bezogen.
+  router.post("/api/v1/creators/:id/evidence", async (ctx) => {
+    await ctx.require("creator.capture");
+    const body = await ctx.body();
+    if (!body.type || !EVIDENCE_TYPES.includes(body.type)) return bad("Unbekannter Evidenztyp");
+    if (!body.public_professional || !body.creative_work_related) {
+      return bad("Evidenz muss öffentlich-professionell und auf kreative Arbeit bezogen sein.", 400, "evidence_scope");
+    }
+    await ctx.db.run(
+      `INSERT INTO evidence_item (id, creator_candidate_id, type, url, excerpt, observed_at, captured_by,
+         public_professional, creative_work_related, counterpart_hash, confidence, created_at)
+       VALUES (?,?,?,?,?,?,?,1,1,?,?,?)`,
+      uuidv7(), ctx.params.id, body.type, body.url || null, (body.excerpt || "").slice(0, 280),
+      body.observed_at || nowIso(), `scout:${ctx.user.username}`,
+      body.counterpart_hash || null, body.confidence ?? null, nowIso()
+    );
+    await ctx.audit({ action: "creator.evidence", subjectType: "creator", subjectId: ctx.params.id, detail: { type: body.type } });
+    return json({ ok: true });
+  });
+
+  // Abgeleitetes Profil, passende Trends und belegte Gesprächsanlässe (SPEC 11.14/11.15).
+  router.get("/api/v1/creators/:id/bridges", async (ctx) => {
+    const cand = await ctx.db.first("SELECT * FROM creator_candidate WHERE id = ?", ctx.params.id);
+    if (!cand) return bad("Kandidatin nicht gefunden", 404, "not_found");
+    const score = await ctx.db.first(
+      "SELECT sei, mmf FROM creator_score_snapshot WHERE creator_candidate_id = ? ORDER BY created_at DESC LIMIT 1",
+      ctx.params.id
+    );
+    const projectRows = await ctx.db.all(
+      "SELECT state, concept_ids, techniques, observed_at FROM creator_project WHERE creator_candidate_id = ?", ctx.params.id
+    );
+    const projects = projectRows.map((p) => ({
+      state: p.state, observed_at: p.observed_at,
+      concept_ids: parseJson(p.concept_ids, []), techniques: parseJson(p.techniques, []),
+    }));
+    const evidence = await ctx.db.all(
+      "SELECT id, type, url, observed_at FROM evidence_item WHERE creator_candidate_id = ? ORDER BY observed_at DESC", ctx.params.id
+    );
+
+    const conceptRows = await ctx.db.all("SELECT id, dimension, label_de FROM concept");
+    const conceptIndex = Object.fromEntries(conceptRows.map((c) => [c.id, c]));
+    const profile = B.creatorProfile(projects, conceptIndex);
+
+    const catalogRows = await ctx.db.all("SELECT sku, name, product_type, surfaces, moments FROM catalog_item");
+    const catalog = catalogRows.map((c) => ({ ...c, surfaces: parseJson(c.surfaces, []), moments: parseJson(c.moments, []) }));
+    const compatibility = await ctx.db.all("SELECT surface, technique, rating FROM technique_compatibility");
+
+    // Trends des Landes mit ihrer jeweils neuesten Bewertung
+    const trends = await ctx.db.all(
+      `SELECT t.id, t.label_de, t.label_local, t.concept_ids, s.tms, s.mrs, s.priority, s.cli_level,
+              s.lifecycle_class, s.confidence, s.opportunity_window
+       FROM trend t
+       LEFT JOIN trend_snapshot s ON s.id = (
+         SELECT id FROM trend_snapshot x WHERE x.trend_id = t.id ORDER BY x.created_at DESC LIMIT 1)
+       WHERE t.country_code = ?`, cand.country_code
+    );
+    const priorities = trends.map((t) => Number(t.priority) || 0);
+    const maxPriority = Math.max(...priorities, 1);
+
+    const matches = [];
+    for (const tr of trends) {
+      const conceptIds = parseJson(tr.concept_ids, []);
+      const aff = B.affinity(profile, conceptIds, conceptIndex);
+      if (!aff.coveredWeight) continue;
+      const tcb = B.bridgeScore({
+        affinityValue: aff.value, sei: score && score.sei, mmf: score && score.mmf,
+        priorityNorm: (Number(tr.priority) || 0) / maxPriority, lastActivityDays: profile.lastActivityDays,
+      });
+      const catalogMatch = B.matchCatalogItem(catalog, conceptIds, profile);
+      const technique = B.techniqueBridge(profile, catalogMatch && catalogMatch.item, compatibility);
+      const hook = B.buildHook({
+        creator: cand, profile, trend: tr, snapshot: tr, catalogMatch, technique,
+        evidence, country: cand.country_code, conceptIndex,
+      });
+      matches.push({
+        trendId: tr.id, label: tr.label_de, labelLocal: tr.label_local,
+        affinity: Math.round(aff.value * 100) / 100,
+        overlap: aff.overlap,
+        tcb: tcb.value,
+        qualifies: B.qualifies({ affinityValue: aff.value, sei: score && score.sei }),
+        lifecycle: tr.lifecycle_class,
+        opportunityWindow: parseJson(tr.opportunity_window, null),
+        hook,
+      });
+    }
+    matches.sort((a, b2) => b2.tcb - a.tcb);
+
+    return json({
+      creator: { id: cand.id, name: cand.display_name || cand.handle, handle: cand.handle, country: cand.country_code },
+      profile: {
+        dimensions: Object.fromEntries(Object.entries(profile.dimensions).map(([k, v]) => [k, v.slice(0, 6)])),
+        finished: profile.finished, projects: profile.projects, lastActivityDays: profile.lastActivityDays,
+      },
+      sei: score && score.sei, mmf: score && score.mmf,
+      matches: matches.slice(0, 5),
+      note: "Gesprächsanlässe sind Entwürfe. Sie gehen erst nach menschlicher Freigabe hinaus; der Versand erfolgt außerhalb des Systems.",
+    });
+  });
+
+  router.post("/api/v1/creators", async (ctx) => {
+    await ctx.require("creator.capture");
+    const body = await ctx.body();
+    if (!body.handle || !body.platform || !body.country_code) return bad("handle, platform und country_code sind nötig");
+    const hash = await hashHandle(ctx.env, body.platform, body.handle);
+    const blocked = await ctx.db.first("SELECT id FROM suppression_entry WHERE platform = ? AND handle_hash = ?", body.platform, hash);
+    if (blocked) return bad("Für dieses Profil liegt ein Widerspruch vor. Es darf nicht erneut erfasst werden.", 409, "suppressed");
+    const id = uuidv7();
+    await ctx.db.run(
+      `INSERT INTO creator_candidate (id, country_code, platform, handle, public_url, display_name, region,
+         creative_categories, follower_count, discovered_via, discovered_at, purge_after, status, updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'scout_check_pending', ?)`,
+      id, body.country_code, body.platform, body.handle, body.public_url || null, body.display_name || null,
+      body.region || null, JSON.stringify(body.creative_categories || []), body.follower_count ?? null,
+      `scout:${ctx.user.username}`, nowIso(), new Date(Date.now() + 90 * 86400000).toISOString(), nowIso()
+    );
+    await ctx.audit({ action: "creator.create", subjectType: "creator", subjectId: id });
+    return json({ ok: true, id });
+  });
+}
+
+function mapCreator(r) {
+  return {
+    id: r.id, country: r.country_code, platform: r.platform, handle: r.handle, url: r.public_url,
+    name: r.display_name, region: r.region, categories: parseJson(r.creative_categories, []),
+    followers: r.follower_count, status: r.status, statusLabel: STATUS_LABEL[r.status] || r.status,
+    sei: r.sei, cci: r.cci, mmf: r.mmf, coverage: r.coverage,
+    flags: parseJson(r.exclusion_flags, []),
+    flagTexts: parseJson(r.exclusion_flags, []).map((f) => FLAG_TEXT[f] || f),
+    explanations: parseJson(r.explanations, []),
+    scorecard: r.raw_total === null || r.raw_total === undefined ? null
+      : { raw: r.raw_total, weighted: r.weighted_total, tableTest: Boolean(r.table_test) },
+    purgeAfter: r.purge_after,
+  };
+}
+
+// Widerspruchsliste speichert nur einen gesalzenen Hash, nie das Profil (INV-13).
+async function hashHandle(env, platform, handle) {
+  const salt = env.HASH_SALT || "radar-dev-salt";
+  const data = new TextEncoder().encode(`${salt}:${platform}:${String(handle).toLowerCase()}`);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
