@@ -2,6 +2,7 @@ import { json, bad } from "../core/router.js";
 import { parseJson } from "../core/db.js";
 import { uuidv7, nowIso } from "../core/ids.js";
 import { FLAG_TEXT, SCORECARD_FIELDS, scorecardTotals, EVIDENCE_TYPES } from "../scoring/creator.js";
+import * as B from "../scoring/bridge.js";
 
 const STATUS_LABEL = {
   discovered: "gefunden", scout_check_pending: "Scout-Check offen", shortlisted: "auf Shortlist",
@@ -143,68 +144,3 @@ export function registerCreatorRoutes(router) {
     );
     await ctx.audit({ action: "creator.scorecard", subjectType: "creator", subjectId: ctx.params.id, detail: totals });
     return json({ ok: true, ...totals });
-  });
-
-  // Scout-Capture: Evidenz erfassen. Pflicht: öffentlich und auf kreative Arbeit bezogen.
-  router.post("/api/v1/creators/:id/evidence", async (ctx) => {
-    await ctx.require("creator.capture");
-    const body = await ctx.body();
-    if (!body.type || !EVIDENCE_TYPES.includes(body.type)) return bad("Unbekannter Evidenztyp");
-    if (!body.public_professional || !body.creative_work_related) {
-      return bad("Evidenz muss öffentlich-professionell und auf kreative Arbeit bezogen sein.", 400, "evidence_scope");
-    }
-    await ctx.db.run(
-      `INSERT INTO evidence_item (id, creator_candidate_id, type, url, excerpt, observed_at, captured_by,
-         public_professional, creative_work_related, counterpart_hash, confidence, created_at)
-       VALUES (?,?,?,?,?,?,?,1,1,?,?,?)`,
-      uuidv7(), ctx.params.id, body.type, body.url || null, (body.excerpt || "").slice(0, 280),
-      body.observed_at || nowIso(), `scout:${ctx.user.username}`,
-      body.counterpart_hash || null, body.confidence ?? null, nowIso()
-    );
-    await ctx.audit({ action: "creator.evidence", subjectType: "creator", subjectId: ctx.params.id, detail: { type: body.type } });
-    return json({ ok: true });
-  });
-
-  router.post("/api/v1/creators", async (ctx) => {
-    await ctx.require("creator.capture");
-    const body = await ctx.body();
-    if (!body.handle || !body.platform || !body.country_code) return bad("handle, platform und country_code sind nötig");
-    const hash = await hashHandle(ctx.env, body.platform, body.handle);
-    const blocked = await ctx.db.first("SELECT id FROM suppression_entry WHERE platform = ? AND handle_hash = ?", body.platform, hash);
-    if (blocked) return bad("Für dieses Profil liegt ein Widerspruch vor. Es darf nicht erneut erfasst werden.", 409, "suppressed");
-    const id = uuidv7();
-    await ctx.db.run(
-      `INSERT INTO creator_candidate (id, country_code, platform, handle, public_url, display_name, region,
-         creative_categories, follower_count, discovered_via, discovered_at, purge_after, status, updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'scout_check_pending', ?)`,
-      id, body.country_code, body.platform, body.handle, body.public_url || null, body.display_name || null,
-      body.region || null, JSON.stringify(body.creative_categories || []), body.follower_count ?? null,
-      `scout:${ctx.user.username}`, nowIso(), new Date(Date.now() + 90 * 86400000).toISOString(), nowIso()
-    );
-    await ctx.audit({ action: "creator.create", subjectType: "creator", subjectId: id });
-    return json({ ok: true, id });
-  });
-}
-
-function mapCreator(r) {
-  return {
-    id: r.id, country: r.country_code, platform: r.platform, handle: r.handle, url: r.public_url,
-    name: r.display_name, region: r.region, categories: parseJson(r.creative_categories, []),
-    followers: r.follower_count, status: r.status, statusLabel: STATUS_LABEL[r.status] || r.status,
-    sei: r.sei, cci: r.cci, mmf: r.mmf, coverage: r.coverage,
-    flags: parseJson(r.exclusion_flags, []),
-    flagTexts: parseJson(r.exclusion_flags, []).map((f) => FLAG_TEXT[f] || f),
-    explanations: parseJson(r.explanations, []),
-    scorecard: r.raw_total === null || r.raw_total === undefined ? null
-      : { raw: r.raw_total, weighted: r.weighted_total, tableTest: Boolean(r.table_test) },
-    purgeAfter: r.purge_after,
-  };
-}
-
-// Widerspruchsliste speichert nur einen gesalzenen Hash, nie das Profil (INV-13).
-async function hashHandle(env, platform, handle) {
-  const salt = env.HASH_SALT || "radar-dev-salt";
-  const data = new TextEncoder().encode(`${salt}:${platform}:${String(handle).toLowerCase()}`);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
