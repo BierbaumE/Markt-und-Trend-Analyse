@@ -17,8 +17,8 @@ export function registerTrendRoutes(router) {
               s.coverage, s.weak_signal, s.geo_confidence, s.opportunity_window, s.explanations, s.cli_level,
               s.velocity, s.acceleration, s.cycle_id
        FROM trend t
-       LEFT JOIN trend_snapshot s ON s.trend_id = t.id
-         AND s.cycle_id = (SELECT id FROM cycle ORDER BY start_date DESC LIMIT 1)
+       LEFT JOIN trend_snapshot s ON s.id = (
+         SELECT id FROM trend_snapshot x WHERE x.trend_id = t.id ORDER BY x.created_at DESC LIMIT 1)
        WHERE t.country_code = ?
        ORDER BY COALESCE(s.priority, -1) DESC`,
       country
