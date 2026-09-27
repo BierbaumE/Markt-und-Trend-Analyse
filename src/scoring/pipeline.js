@@ -38,25 +38,31 @@ export async function runCycle(env, { countries = null, runId = uuidv7() } = {})
       const weights = countryWeights(code);
       const agg = T.aggregateSources(bySource, weights);
 
-      // z-Werte der Velocity je Quelle innerhalb Land+Quelle
+      // Je Quelle: z-Wert (für den Uneinigkeitsindex) und Perzentilrang (für die Richtung)
       const velocityZ = {};
-      const sensorZ = {};
+      const sensorPct = {};
+      let velocityZSum = 0;
+      let velocityZCount = 0;
       for (const [sourceKey, f] of Object.entries(bySource)) {
         const population = await velocityPopulation(db, code, sourceKey);
         const sd = stddev(population) || 1;
         const m = median(population) || 0;
         const z = (f.velocity - m) / sd;
         velocityZ[sourceKey] = z;
+        velocityZSum += z;
+        velocityZCount++;
+        const pct = percentileRank(f.velocity, population);
         const sensor = (SENSOR_OF_SOURCE[sourceKey] || {}).sensor;
-        if (sensor) sensorZ[sensor] = Math.max(sensorZ[sensor] ?? -Infinity, z);
+        if (sensor) sensorPct[sensor] = Math.max(sensorPct[sensor] ?? -1, pct);
       }
+      const velocityZMean = velocityZCount ? velocityZSum / velocityZCount : 0;
 
       const cross = T.crossSourceConfirmation(bySource, velocityZ, weights);
       const shareLocal = (shares[code] || {})[primary] ?? 0;
       const others = codes.filter((c) => c !== code).map((c) => (shares[c] || {})[primary] ?? 0);
       const cliLevel = T.culturalLift(shareLocal, others);
 
-      computed.push({ trend, conceptIds, primary, bySource, agg, velocityZ, sensorZ, cross, cliLevel });
+      computed.push({ trend, conceptIds, primary, bySource, agg, velocityZ, sensorPct, cross, cliLevel, velocityZMean });
     }
 
     // Perzentile innerhalb des Landes
@@ -79,20 +85,21 @@ export async function runCycle(env, { countries = null, runId = uuidv7() } = {})
 
       const scoreT = T.tms({ velocityPct, accelerationPct, crossSource: c.cross.value, noveltyPct, cliDeltaPct, persistence: c.agg.persistence, commercialPct });
       const dis = T.sdi(c.velocityZ);
-      const pattern = T.divergencePattern(c.sensorZ);
+      const pattern = T.divergencePattern(c.sensorPct);
 
-      // Lebenszyklus: Filter ueber die letzten Wochen, damit sich eine Historie bildet
-      let post = null;
-      for (let step = 0; step < 6; step++) {
-        post = T.lifecycleStep(post ? Object.values(post.posterior) : null, {
-          level: levelPct, velocity: velocityPct, acceleration: accelerationPct,
-          crossSource: c.cross.value, persistence: c.agg.persistence,
-        }, {
-          seasonalityUnadjusted: c.agg.seasonalityUnadjusted,
-          lowCoverage: scoreT.coverage < S.tms.minCoverageForTrendClasses,
-          ukProxy: code === "GB-ENG",
-        });
-      }
+      // Der Lebenszyklus arbeitet mit absoluten Maßen (z-Wert der Steigung, Bestätigung,
+      // Persistenz). Perzentile innerhalb weniger Trends wären dafür zu grob.
+      const post = T.lifecycleRun({
+        level: levelPct,
+        velocity: T.sigmoid01(c.velocityZMean),
+        acceleration: T.sigmoid01(c.agg.acceleration * 40),
+        crossSource: c.cross.value,
+        persistence: c.agg.persistence,
+      }, {
+        seasonalityUnadjusted: c.agg.seasonalityUnadjusted,
+        lowCoverage: scoreT.coverage < S.tms.minCoverageForTrendClasses,
+        ukProxy: code === "GB-ENG",
+      });
 
       const rel = await relevanceComponents(db, code, c.conceptIds, commercialPct);
       const scoreM = T.mrs(rel);
